@@ -33,7 +33,7 @@ export class SearchService {
         // essa regex serve para o banco de dados retornar tudo que tenha esse nome ou parte dele
         //                                                  V
         const search = await this.searchModel.findOne({title:{$regex:movieName.title}});
-        console.log("Search findOne No searchModel  = >",search?.title);
+        // console.log("Search findOne No searchModel  = >",search?.title);
 
         // if (search.length > 0){
             return search;
@@ -66,28 +66,35 @@ export class SearchService {
         const traducoes = await this.getNamesUsingTmdb(title);
         console.log("traduções ===>", traducoes);
         for (const iten of traducoes) {
-            console.log("item dentro das traduções",iten);
-        //     const movieOnDB = await this.searchOnMyDb(iten);
-        //     if (movieOnDB){
-        //         console.log("ACHEI NO MEU DB! Vamos adicionar a lista resultado!")
-        //         movieList.push(movieOnDB)
-        //     }else{
-        //         console.log("NÃO ACHEI NO MEU DB! Vamos Buscar de fora!")
+            // console.log("item dentro das traduções",iten);
+            const movieOnDB = await this.searchOnMyDb(iten);
+            // movieList.push(movieOnDB)
+            // console.log(movieOnDB);
+            if (movieOnDB !== null){
+                console.log("ACHEI NO MEU DB! Vamos adicionar a lista resultado!", movieOnDB.title)
+                
+                // const isInMovieList = movieList.find(movieOnDB)
+                // if (!isInMovieList){
+                    movieList.push(movieOnDB)
+                // }
+            }else{
+                console.log("NÃO ACHEI NO MEU DB! Vamos Buscar de fora!")
         //         // buscar no tmdb e adicionar na tempSearch         ****
-        //         let result = await this.searchOnTmDb(iten);
-        //         console.log("result dentro do Else  ", result);
+                let result = await this.searchOnTmDb(iten);
+                console.log("result dentro do Else  ", result);
         //         // buscar da tempSearch no OMDB e adição na Search  ****
-        //         for (const movie of result) {
-        //             console.log("Movie do for  ",movie);
-        //             await this.searchOnOmDb(movie)
-        //         }
+                for (const movie of result) {
+                    console.log("Movie do for  ",movie);
+                    await this.searchOnOmDb(movie)
+                }
         // //         console.log("busca de novo no meu DB", iten);
         // //         movieOnDB = await this.searchOnMyDb(iten);
         // //         console.log("movieOnDB segunda vez => ",movieOnDB);
-        //     }
+            }
         }
         // return movieOnDB;
         // console.log("movielist pra retornar pro controller",movieList);
+
         return movieList;
     }
 
@@ -117,22 +124,22 @@ export class SearchService {
         }
         console.log("Lista dos TTIds do IMDB",idsList);
 
-        let contador = 1;
+        let contador = 1; // contador para visualização!
         for (const ttId of idsList) {
             let details = await this.axios.getDetailedMoviesOnOMDB(ttId);
             // if (details.Title){
             const movie = {
                     title: details.Title,
-                    poster: details.Poster,
-                    imdbID: details.imdbID,
-                    year: details.Year,
-                    genre: details.Genre,
-                    director: details.Director,
-                    actor: details.Actors,
-                    imdbRating: details.imdbRating                
+                    poster: details.Poster? details.Poster: "Não disponivel",
+                    imdbID: details.imdbID? details.imdbID: "Não disponivel",
+                    year: details.Year? details.Year: "Não disponivel",
+                    genre: details.Genre? details.Genre: "Não disponivel",
+                    director: details.Director? details.Director: "Não disponivel",
+                    actor: details.Actors? details.Actors: "Não disponivel",
+                    imdbRating: details.imdbRating? details.imdbRating: "Não disponivel",
                 } as SearchDto
-                // console.log(`movie ${contador}  ==> `,movie);
-                contador ++;
+                console.log(`movie ${contador}  ==> `, movie); //Para visualização!
+                contador ++; // contador para visualização
                 await this.tempsearchModel.deleteMany({title:{$regex:movie.title, $options:"i"}});
                 await this.searchModel.create(movie);                
             // }
