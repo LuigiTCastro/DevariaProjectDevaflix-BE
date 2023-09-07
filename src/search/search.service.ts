@@ -19,111 +19,79 @@ export class SearchService {
         private readonly axios:AxiosService
         ) {}
 
-    
-
-    async create(dto: TempSearchDto): Promise<SearchDocument> {
-        const createdTitle = new this.tempsearchModel(dto);
-        console.log("createdTitle.save();")
-        createdTitle.save();
-        return
-    }
-
-    async searchOnMyDb(movieName:TempSearchDto){
-        // console.log(`Buscar ${movieName.title} no meu banco de dados`);
-        // essa regex serve para o banco de dados retornar tudo que tenha esse nome ou parte dele
-        //                                                  V
-        const search = await this.searchModel.findOne({title:{$regex:movieName.title}});
-        // console.log("Search findOne No searchModel  = >",search?.title);
-
-        // if (search.length > 0){
+        async searchOnMyDb(movieName:TempSearchDto){
+        const search = await this.searchModel.find({title:{$regex:movieName.title}});
+        if (search.length > 0){
             return search;
-        // }
-        // return null;
+        }
+        return null;
     }
 
     async getNamesUsingTmdb(title:TempSearchDto){
-        // console.log('titulo que chega no getNameUsingTmdb', title);
-        // title.title = title.title.replace(spaceSwap, '+');
-        // console.log("Nome do filme alterado para ",title);
-        const movieList = await this.axios.getMoviesOnTMDB(title);
-        // console.log("movielist do getName pelo tmdb",movieList);
-        let movieNames = [];
-        for (const iten of movieList) {
-            // console.log("busca do tmdb pelo nome traduzido",iten.title);;
-            const movie = {title:iten.title}
-            movieNames.push(movie);
-        }
-        // console.log(movieNames);
-        return movieNames;
-        // return movieList;
-        // return title; OK!
-    }
-
-    async serchMovie(title:TempSearchDto){
-        //usar o tmdb pra tradução do nome
+        const movieNames = await this.axios.getMoviesOnTMDB(title);
         let movieList = [];
-        // console.log(title);
-        const traducoes = await this.getNamesUsingTmdb(title);
-        console.log("traduções ===>", traducoes);
-        for (const iten of traducoes) {
-            // console.log("item dentro das traduções",iten);
-            const movieOnDB = await this.searchOnMyDb(iten);
-            // movieList.push(movieOnDB)
-            // console.log(movieOnDB);
-            if (movieOnDB !== null){
-                console.log("ACHEI NO MEU DB! Vamos adicionar a lista resultado!", movieOnDB.title)
-                
-                // const isInMovieList = movieList.find(movieOnDB)
-                // if (!isInMovieList){
-                    movieList.push(movieOnDB)
-                // }
-            }else{
-                console.log("NÃO ACHEI NO MEU DB! Vamos Buscar de fora!")
-        //         // buscar no tmdb e adicionar na tempSearch         ****
-                let result = await this.searchOnTmDb(iten);
-                console.log("result dentro do Else  ", result);
-        //         // buscar da tempSearch no OMDB e adição na Search  ****
-                for (const movie of result) {
-                    console.log("Movie do for  ",movie);
-                    await this.searchOnOmDb(movie)
-                }
-        // //         console.log("busca de novo no meu DB", iten);
-        // //         movieOnDB = await this.searchOnMyDb(iten);
-        // //         console.log("movieOnDB segunda vez => ",movieOnDB);
-            }
+        for (const iten of movieNames) {
+            const movie = {title:iten.title}
+            movieList.push(movie);
         }
-        // return movieOnDB;
-        // console.log("movielist pra retornar pro controller",movieList);
-
+        console.log(movieNames);
         return movieList;
     }
 
+    // this.activeSockets = this.activeSockets.filter(
+    //     socket => socket.id !== client.id
+    //   );
+
+    async serchMovie(title:TempSearchDto){
+        try{
+            let movieList = [];
+            const traducoes = await this.getNamesUsingTmdb(title);
+            for (const iten of traducoes) {
+                let movieOnDB = await this.searchOnMyDb(iten);
+                console.log(movieOnDB);
+                if (movieOnDB !== null){
+                    console.log("ACHEI NO MEU DB! Vamos adicionar a lista resultado!", movieOnDB)
+                    for (const movieObject of movieOnDB) {
+                        movieList.push(movieObject);                        
+                    }
+                }else{
+                    let result = await this.searchOnTmDb(iten);
+                    for (const movie of result) {
+                        await this.searchOnOmDb(movie)
+                        movieOnDB = await this.searchOnMyDb(iten);
+                        for (const movieObject of movieOnDB) {
+                            movieList.push(movieObject);                        
+                        }
+                    }
+                }
+            }
+            return movieList;
+        }catch (error){
+            console.log(error);
+        }
+    }
+
     async searchOnTmDb(title: TempSearchDto){
-        // console.log("entrou na searchTmDb", title);
         const movieList = await this.axios.getMoviesOnTMDB(title);
         for (const movie of movieList) {
-            // console.log(movie);
-            await this.tempsearchModel.create(movie);
+            console.log(movie);
+
+            await this.tempsearchModel.create({title: movie.title});
         }
         return movieList;
     }
 
     async searchOnOmDb(title: TempSearchDto){
-        // title.title = title.title.replace(spaceSwap, '+');
-        // console.log("movieName dentro do searchOnOmDb", title)
         const movieList = await this.axios.getPreviewMoviesOnOMDB(title);
-        // console.log("movieList do omdb =>> ",movieList);
-
         let idsList =[];
-        for (const item of movieList) {
+        for (const iten of movieList) {
             // if (item.title != "Not Found"){
                 // let imdbId = item.imdbID;
                 // idsList.push(imdbId);
-                idsList.push(item.imdbID);
+                idsList.push(iten.imdbID);
             // }
         }
         console.log("Lista dos TTIds do IMDB",idsList);
-
         let contador = 1; // contador para visualização!
         for (const ttId of idsList) {
             let details = await this.axios.getDetailedMoviesOnOMDB(ttId);
@@ -142,8 +110,7 @@ export class SearchService {
                 contador ++; // contador para visualização
                 await this.tempsearchModel.deleteMany({title:{$regex:movie.title, $options:"i"}});
                 await this.searchModel.create(movie);                
-            // }
-            
+            // }       
         }
         return "ok";
     }
