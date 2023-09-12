@@ -1,12 +1,14 @@
-import {Controller, HttpCode, HttpStatus ,Get, Post, Param} from '@nestjs/common';
+import {Controller, Get, Request, BadRequestException, Body, Put, HttpCode, HttpStatus, Param} from '@nestjs/common';
 import { SearchService } from './search.service';
+import { IsPublic } from 'src/auth/decorators/ispublic.decorator';
 
 @Controller('search')
 export class SearchController {
     constructor(private readonly searchService: SearchService){}
 
-    @Get(':title')
-    async getmovies(@Param() params){
+    @Get(":title")
+    @IsPublic()
+    async getmovie(@Param() params){
         const movieName = params;
         console.log("movieName no comtroller", movieName);
         let movies = await this.searchService.serchMovie(movieName);

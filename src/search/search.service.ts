@@ -59,9 +59,12 @@ export class SearchService {
                     for (const movie of result) {
                         await this.searchOnOmDb(movie)
                         movieOnDB = await this.searchOnMyDb(iten);
-                        for (const movieObject of movieOnDB) {
-                            movieList.push(movieObject);                        
-                        }
+                        console.log("vamos ver como o movieondb volta ")
+                        // if (movieOnDB.title != "N/A"){
+                        //     for (const movieObject of movieOnDB) {
+                        //         movieList.push(movieObject);                        
+                        //     }
+                        // }
                     }
                 }
             }
@@ -83,35 +86,37 @@ export class SearchService {
 
     async searchOnOmDb(title: TempSearchDto){
         const movieList = await this.axios.getPreviewMoviesOnOMDB(title);
+        console.log("movie list",movieList);
         let idsList =[];
-        for (const iten of movieList) {
-            // if (item.title != "Not Found"){
-                // let imdbId = item.imdbID;
-                // idsList.push(imdbId);
-                idsList.push(iten.imdbID);
-            // }
+        if (movieList.title != "N/A"){
+            console.log(movieList)
+                // for (const iten of movieList) {
+                    // if (iten.imdbID){
+                        idsList.push(movieList.imdbID);
+                    // }
+                // }
+            console.log("Lista dos TTIds do IMDB",idsList);
+            let contador = 1; // contador para visualização!
+            for (const ttId of idsList) {
+                let details = await this.axios.getDetailedMoviesOnOMDB(ttId);
+                // if (details.Title){
+                const movie = {
+                        title: details.Title,
+                        poster: details.Poster? details.Poster: "N/A",
+                        imdbID: details.imdbID? details.imdbID: "N/A",
+                        year: details.Year? details.Year: "N/A",
+                        genre: details.Genre? details.Genre: "N/A",
+                        director: details.Director? details.Director: "N/A",
+                        actor: details.Actors? details.Actors: "N/A",
+                        imdbRating: details.imdbRating? details.imdbRating: "N/A",
+                    } as SearchDto
+                    console.log(`movie ${contador}  ==> `, movie); //Para visualização!
+                    contador ++; // contador para visualização
+                    await this.tempsearchModel.deleteMany({title:{$regex:movie.title}});
+                    await this.searchModel.create(movie);                
+                // }       
+            }
+            return "ok";
         }
-        console.log("Lista dos TTIds do IMDB",idsList);
-        let contador = 1; // contador para visualização!
-        for (const ttId of idsList) {
-            let details = await this.axios.getDetailedMoviesOnOMDB(ttId);
-            // if (details.Title){
-            const movie = {
-                    title: details.Title,
-                    poster: details.Poster? details.Poster: "Não disponivel",
-                    imdbID: details.imdbID? details.imdbID: "Não disponivel",
-                    year: details.Year? details.Year: "Não disponivel",
-                    genre: details.Genre? details.Genre: "Não disponivel",
-                    director: details.Director? details.Director: "Não disponivel",
-                    actor: details.Actors? details.Actors: "Não disponivel",
-                    imdbRating: details.imdbRating? details.imdbRating: "Não disponivel",
-                } as SearchDto
-                console.log(`movie ${contador}  ==> `, movie); //Para visualização!
-                contador ++; // contador para visualização
-                await this.tempsearchModel.deleteMany({title:{$regex:movie.title, $options:"i"}});
-                await this.searchModel.create(movie);                
-            // }       
-        }
-        return "ok";
     }
 }
