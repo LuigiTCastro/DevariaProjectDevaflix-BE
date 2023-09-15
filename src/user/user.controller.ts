@@ -19,6 +19,7 @@ export class UserController{
         return {
             name: user.name,
             email: user.email,
+            avatar: user.avatar,
             id: user._id
         }
     }

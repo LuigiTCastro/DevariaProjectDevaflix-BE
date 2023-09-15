@@ -10,7 +10,7 @@ export class SearchController {
     @IsPublic()
     async getmovie(@Param() params){
         const movieName = params;
-        console.log("movieName no comtroller", movieName);
+        console.log("movieName no controller", movieName);
         let movies = await this.searchService.serchMovie(movieName);
         console.log("movies do controle... o que esta retornando para o front =>", movies);
         return movies;

@@ -13,4 +13,7 @@ export class RegisterDto {
     @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, 
         {message: UserMessagesHelper.REGISTER_PASSWORD_NOT_VALID})
     password:string;
+
+    @IsString()
+    avatar:string;
 }
