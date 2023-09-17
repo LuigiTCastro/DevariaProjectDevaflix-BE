@@ -31,6 +31,8 @@ export class AuthService{
             token: this.jwtService.sign(tokenPayload, {secret: process.env.USER_JWT_SECRET_KEY})
         }
     }
+
+    // REGISTER NÃO FICA MELHOR NA CAMADA DE USER?
     async register(dto: RegisterDto){
         this.logger.debug('register - started');
         if(await this.userService.existsByEmail(dto.email)){

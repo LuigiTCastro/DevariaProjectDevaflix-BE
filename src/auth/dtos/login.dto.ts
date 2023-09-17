@@ -4,6 +4,7 @@ import { MessagesHelper } from "../helpers/messages.helper";
 export class LoginDto {
     @IsEmail({}, {message: MessagesHelper.AUTH_LOGIN_NOT_FOUND})
     login: string;
+    // MUDAR 'LOGIN' PARA 'EMAIL' (PADRÃO)
 
     @IsNotEmpty({message : MessagesHelper.AUTH_PASSWORD_NOT_FOUND})
     password: string;

@@ -1,4 +1,4 @@
-import {Controller, Get, Request, BadRequestException, Body, Put, HttpCode, HttpStatus, Param} from '@nestjs/common';
+import {Controller, Get, Request, BadRequestException, Body, Put, HttpCode, HttpStatus, Param, Query} from '@nestjs/common';
 import { SearchService } from './search.service';
 import { IsPublic } from 'src/auth/decorators/ispublic.decorator';
 
@@ -15,4 +15,12 @@ export class SearchController {
         console.log("movies do controle... o que esta retornando para o front =>", movies);
         return movies;
     }
+
+    @Get('filter/:year')
+    async filterMoviesByYear(@Param('year') movierYear: string) {
+        // const moviesList = []
+        const movies = await this.searchService.findMoviesByYear(movierYear)
+        return movies
+    }
+
 }

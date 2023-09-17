@@ -15,6 +15,7 @@ export class AuthController{
         return this.authService.login(dto);
     }
 
+    // REGISTER NÃO FICA MELHOR NA CAMADA DE USER?
     @Post('register')
     @HttpCode(HttpStatus.OK)
     @IsPublic()

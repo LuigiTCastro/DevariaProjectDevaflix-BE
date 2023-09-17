@@ -1,4 +1,4 @@
-import {Injectable} from '@nestjs/common';
+import {BadRequestException, Injectable} from '@nestjs/common';
 import {InjectModel} from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SearchDto } from './dtos/search.dto';
@@ -46,6 +46,7 @@ export class SearchService {
     //     socket => socket.id !== client.id
     //   );
 
+    // CORRIGIR NOME DA FUNÇÃO
     async serchMovie(title:TempSearchDto){
         try{
             let movieList = [];
@@ -123,5 +124,16 @@ export class SearchService {
                 await this.searchModel.create(movie);                
             }
         }
+    }
+
+    async findMoviesByYear(movieYear: string) {
+        const movies = await this.searchModel.find({year: {$regex: movieYear}})
+        console.log(movieYear)
+
+        if(!movies) {
+            throw new BadRequestException("Nenhum filme foi encontrado.")
+        }
+
+        return movies
     }
 }

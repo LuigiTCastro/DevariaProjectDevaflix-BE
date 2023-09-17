@@ -10,7 +10,7 @@ export class SearchDto {
     @IsString()
     imdbID:string;
     
-    @IsNumber()
+    @IsString() // PASSEI DE 'ISNUMBER' PARA 'ISSTRING'
     year:string;
     
     @IsString()
