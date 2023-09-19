@@ -29,6 +29,7 @@ export class Search {
     @Prop({required: true})
     imdbRating:string;
 
+    @Prop({required: true})
+    plot:string;
 }
-
 export const SearchSchema = SchemaFactory.createForClass(Search);

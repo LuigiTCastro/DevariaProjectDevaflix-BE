@@ -6,15 +6,11 @@ export class SearchDto {
 
     @IsString()    
     poster:string;
-    
+        
     @IsString()
     imdbID:string;
     
-<<<<<<< Updated upstream
-    @IsNumber()
-=======
     @IsString() 
->>>>>>> Stashed changes
     year:string;
     
     @IsString()
@@ -29,4 +25,6 @@ export class SearchDto {
     @IsString()
     imdbRating:string;
     
+    @IsString()    
+    plot:string;
 }

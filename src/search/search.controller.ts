@@ -1,6 +1,7 @@
-import {Controller, Get, Request, BadRequestException, Body, Put, HttpCode, HttpStatus, Param} from '@nestjs/common';
+import {Controller, Get, Request, BadRequestException, Body, Put, HttpCode, HttpStatus, Param, Query} from '@nestjs/common';
 import { SearchService } from './search.service';
 import { IsPublic } from 'src/auth/decorators/ispublic.decorator';
+
 
 @Controller('search')
 export class SearchController {
@@ -14,15 +15,13 @@ export class SearchController {
         console.log("movies do controle... o que esta retornando para o front =>", movies);
         return movies;
     }
-<<<<<<< Updated upstream
-=======
 
-    @Get('filter/')
+    @Get('filter')
+    @HttpCode(HttpStatus.OK)
     @IsPublic()
-    async filterMovies(@Body() req) {
-        const movies = await this.searchService.findMoviesbyfilter(req.filter,req.value)
-        return movies
+    async getFilteredMovies(@Query() filters?:any) {
+        const movies = await this.searchService.findMoviesbyfilter(filters);
+        return movies;
     }
 
->>>>>>> Stashed changes
 }
