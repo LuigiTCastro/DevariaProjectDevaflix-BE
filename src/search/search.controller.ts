@@ -1,4 +1,4 @@
-import {Controller, Get, Request, BadRequestException, Body, Put, HttpCode, HttpStatus, Param, Query} from '@nestjs/common';
+import {Controller, Get, BadRequestException, HttpCode, HttpStatus, Query} from '@nestjs/common';
 import { SearchService } from './search.service';
 import { IsPublic } from 'src/auth/decorators/ispublic.decorator';
 
@@ -7,21 +7,28 @@ import { IsPublic } from 'src/auth/decorators/ispublic.decorator';
 export class SearchController {
     constructor(private readonly searchService: SearchService){}
 
-    @Get(":title")
+    @Get("title/")
+    @HttpCode(HttpStatus.OK)
     @IsPublic()
-    async getmovie(@Param() movieName){
-        console.log("movieName no controller", movieName);
-        let movies = await this.searchService.searchMovie(movieName);
-        console.log("movies do controle... o que esta retornando para o front =>", movies);
-        return movies;
+    async getmovie(@Query() movieName){
+        const movies = await this.searchService.searchMovie(movieName);
+        if (movies.length < 1){
+            throw new BadRequestException(process.env.NO_RESULTS_FOUND);
+        }else{
+            return movies;
+        }
     }
 
-    @Get('filter')
+    @Get('filter/')
     @HttpCode(HttpStatus.OK)
     @IsPublic()
     async getFilteredMovies(@Query() filters?:any) {
         const movies = await this.searchService.findMoviesbyfilter(filters);
-        return movies;
+        if (movies.length < 1){
+            throw new BadRequestException(process.env.NO_RESULTS_FOUND);
+        }else{
+            return movies;
+        }
     }
 
 }
