@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable} from '@nestjs/common';
+import {BadRequestException, Injectable, Logger} from '@nestjs/common';
 import {InjectModel} from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SearchDto } from './dtos/search.dto';
@@ -18,6 +18,8 @@ export class SearchService {
         @InjectModel(TempSearch.name) private tempsearchModel: Model<TempSearchDocument>,
         private readonly axios:AxiosService
         ) {}
+
+        private logger = new Logger(SearchService.name)
 
         async searchOnMyDb(movieName:TempSearchDto){
         // console.log("até aqui fopi");
@@ -47,6 +49,7 @@ export class SearchService {
     //   );
 
     // CORRIGIR NOME DA FUNÇÃO
+    // SE ENCONTRAR PELO MENOS UM FILME NO BANCO, NÃO VAI SER SUFICIENTE PRA NAO PROCURAR NAS APIS?
     async serchMovie(title:TempSearchDto){
         try{
             let movieList = [];
@@ -126,14 +129,34 @@ export class SearchService {
         }
     }
 
-    async findMoviesByYear(movieYear: string) {
-        const movies = await this.searchModel.find({year: {$regex: movieYear}})
-        console.log(movieYear)
+    async findMoviesByFilters(filters: any) {
+        try {
+            this.logger.debug('Movies filtered!')
 
-        if(!movies) {
-            throw new BadRequestException("Nenhum filme foi encontrado.")
+            const query = {}
+
+            const filterAttributes = ['title','year','genre','director','actor','imdbRating']
+
+            for (const attr of filterAttributes) {
+                if (filters[attr]) {
+                    query[attr] = {$regex: filters[attr], $options: 'i'}
+                }
+            }
+
+            // TO FIX THE imdbRating RULES
+            // TO IMPROVE THE FILTER LOGIC 
+
+            const movies = await this.searchModel.find(query)
+
+            if(!movies) {
+                throw new BadRequestException("Nenhum filme foi encontrado.")
+            }
+            
+            return movies
         }
 
-        return movies
+        catch(error) {
+            console.log(error)
+        }
     }
 }
