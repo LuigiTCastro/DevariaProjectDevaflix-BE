@@ -1,4 +1,4 @@
-import { IsNumber, IsString } from "class-validator";
+import { IsString } from "class-validator";
 
 export class SearchDto {
     @IsString()
@@ -10,7 +10,11 @@ export class SearchDto {
     @IsString()
     imdbID:string;
     
+<<<<<<< Updated upstream
     @IsNumber()
+=======
+    @IsString() 
+>>>>>>> Stashed changes
     year:string;
     
     @IsString()
@@ -22,7 +26,7 @@ export class SearchDto {
     @IsString()
     actor:string;
     
-    @IsNumber()
+    @IsString()
     imdbRating:string;
     
 }

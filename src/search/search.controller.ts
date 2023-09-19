@@ -8,11 +8,21 @@ export class SearchController {
 
     @Get(":title")
     @IsPublic()
-    async getmovie(@Param() params){
-        const movieName = params;
+    async getmovie(@Param() movieName){
         console.log("movieName no controller", movieName);
-        let movies = await this.searchService.serchMovie(movieName);
+        let movies = await this.searchService.searchMovie(movieName);
         console.log("movies do controle... o que esta retornando para o front =>", movies);
         return movies;
     }
+<<<<<<< Updated upstream
+=======
+
+    @Get('filter/')
+    @IsPublic()
+    async filterMovies(@Body() req) {
+        const movies = await this.searchService.findMoviesbyfilter(req.filter,req.value)
+        return movies
+    }
+
+>>>>>>> Stashed changes
 }

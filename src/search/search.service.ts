@@ -6,6 +6,7 @@ import { Search, SearchDocument } from './schemas/search.schema';
 import { TempSearch, TempSearchDocument } from './schemas/tempsearch.schema';
 import {AxiosService} from './AxiosService';
 import { TempSearchDto } from './dtos/tempsearch.dto';
+import { MovieMessagesHelper } from './helpers/messages.helper';
 
 
 let spaceSwap = / /gi;
@@ -46,7 +47,12 @@ export class SearchService {
     //     socket => socket.id !== client.id
     //   );
 
+<<<<<<< Updated upstream
     async serchMovie(title:TempSearchDto){
+=======
+    // CORRIGIR NOME DA FUNÇÃO
+    async searchMovie(title:TempSearchDto){
+>>>>>>> Stashed changes
         try{
             let movieList = [];
             const traducoes = await this.getNamesUsingTmdb(title);
@@ -124,4 +130,39 @@ export class SearchService {
             }
         }
     }
+<<<<<<< Updated upstream
 }
+=======
+
+    async findMoviesbyfilter(filter: string, value:string) {
+        if (value.length < 2 ){
+            throw new BadRequestException(MovieMessagesHelper.INVALID_MOVIE_PARAM);
+        }
+        let movies = [];
+        switch (filter) {
+            case 'year':
+                movies = await this.searchModel.find({year: {$regex:value}});
+                break;
+            case 'genre':
+                movies = await this.searchModel.find({genre: {$regex:value}});
+                break;
+            case 'director':
+                movies = await this.searchModel.find({director: {$regex:value}});
+                break;
+            case 'actor':
+                movies = await this.searchModel.find({actor: {$regex:value}});
+                break;
+            case 'imdbRating':
+                movies = await this.searchModel.find({imdbRating: {$regex:value}});
+                break;
+            default:
+                throw new BadRequestException(MovieMessagesHelper.FILTER_MUST_BE_SELECTED);
+          }
+        console.log('retorno dos movies --> ', movies);
+        if(movies.length < 1) {
+            throw new BadRequestException(MovieMessagesHelper.MOVIE_NOT_FOUND);
+        }
+        return movies;
+    }
+}
+>>>>>>> Stashed changes

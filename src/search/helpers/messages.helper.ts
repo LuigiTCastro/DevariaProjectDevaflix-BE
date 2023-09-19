@@ -1,6 +1,6 @@
 export const MovieMessagesHelper = {
-    MOVIE_NAME_TRANSLATING: "Traduzindo nome do filme...",
-    MOVIE_NOT_FOUND:"filme não encontrado.",
-    REFRESING_PAGE:"Atualizando pagina,",
-
+    INVALID_MOVIE_PARAM: "Parametro de busca inválido.",
+    MOVIE_NOT_FOUND:"Filme não encontrado.",
+    REFRESING_PAGE:"Atualizando pagina.",
+    FILTER_MUST_BE_SELECTED:"Por favor selecione o filtro da busca."
 }
