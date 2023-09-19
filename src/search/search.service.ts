@@ -50,12 +50,13 @@ export class SearchService {
             console.log(`O Filme "${movie.title}" com o id no tmdb "${movie.id}" retornou`)
             idsOnTMDB.push(movie.id);
         }
+        console.log(idsOnTMDB)
         for (const id of idsOnTMDB) {
             const result = await this.axios.getMovieByIdsOnTMDB(id);
             
-            // console.log(result);
-            console.log(result.imdb_id.length);
-            console.log(result.status);
+            console.log(result);
+            // console.log(result.imdb_id.length);
+            // console.log(result.status);
             if (result.status == "Released" && result.imdb_id !== null && result.imdb_id.length > 0){
                 console.log(`id ${id} tem o IMDB ID ${result.imdb_id}`);
                 const movieObj ={

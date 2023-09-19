@@ -16,7 +16,7 @@ export class AxiosService{
         // console.log(process.env.TMDB_MOVIE_DETAILS_URL + `${id}&` + process.env.API_KEY);
         const data = await axios.get(process.env.TMDB_MOVIE_DETAILS_URL + `/${id}&` + process.env.API_KEY);
         // console.log('captou o Data usando axios pelo TMDB', data.data.results);
-        console.log('result do tmdb', data.data.imdb_id);
+        console.log('result do tmdb', data.data);
         return data.data;
     }
 
