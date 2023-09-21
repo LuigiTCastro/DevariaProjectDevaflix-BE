@@ -8,6 +8,7 @@ import {AxiosService} from './AxiosService';
 import { TempSearchDto } from './dtos/tempsearch.dto';
 import { MovieMessagesHelper } from './helpers/messages.helper';
 import { Logger } from '@nestjs/common';
+import { randomInt } from 'crypto';
 
 
 let spaceSwap = / /gi;
@@ -110,7 +111,10 @@ export class SearchService {
         
     }
 
-    async findMoviesbyfilter(filters:any) {
+    // IMPROVE THE OPERATION
+    // MAKE SEARCH IN THE APIS TOO
+    // FIX THE IMDBRATING VALIDATION
+    async findMoviesByFilter(filters:any) {
         try{
             this.logger.debug('Filtrando filmes')
             const query = {};
@@ -128,6 +132,33 @@ export class SearchService {
             return movies;
         }catch(error){
             console.log(error);
+        }
+    }
+
+    async findRandomMovieFromMyDb() {
+        try {
+            this.logger.debug('Searching random movie.')
+
+            const moviesOnDb = await this.searchModel.find()
+            const moviesList = []
+
+            for(const movie of moviesOnDb) {
+                moviesList.push(movie)
+            }
+
+            const randomIndex = randomInt(0,moviesList.length)
+            const randomMovie = moviesList[randomIndex]
+
+            if(!randomMovie) {
+                throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
+            }
+
+            this.logger.debug('Random movie found.')
+            return randomMovie
+        }
+
+        catch(error) {
+            this.logger.error(error)
         }
     }
 }
