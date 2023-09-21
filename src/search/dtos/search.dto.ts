@@ -1,4 +1,4 @@
-import { IsNumber, IsString } from "class-validator";
+import { IsString } from "class-validator";
 
 export class SearchDto {
     @IsString()
@@ -6,11 +6,11 @@ export class SearchDto {
 
     @IsString()    
     poster:string;
-    
+        
     @IsString()
     imdbID:string;
     
-    @IsString() // PASSEI DE 'ISNUMBER' PARA 'ISSTRING'
+    @IsString() 
     year:string;
     
     @IsString()
@@ -22,7 +22,9 @@ export class SearchDto {
     @IsString()
     actor:string;
     
-    @IsNumber()
+    @IsString()
     imdbRating:string;
     
+    @IsString()    
+    plot:string;
 }

@@ -7,6 +7,12 @@ export type TempSearchDocument = HydratedDocument<TempSearch>;
 export class TempSearch {
     @Prop({required: true})
     title:string;
+
+    @Prop({required: true})
+    imdbID:string;
+
+    @Prop({required: true})
+    videos:string;
 }
 
 export const TempSearchSchema = SchemaFactory.createForClass(TempSearch);
