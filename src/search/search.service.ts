@@ -10,8 +10,6 @@ import { MovieMessagesHelper } from './helpers/messages.helper';
 import { Logger } from '@nestjs/common';
 
 
-let spaceSwap = / /gi;
-
 @Injectable()
 export class SearchService {
     constructor(
@@ -69,10 +67,8 @@ export class SearchService {
             let contador = 1;
             let movieList = [];
             const traducoes = await this.searchOnTmDb(title);
-            console.log(traducoes)
             this.logger.debug('filmes procurados no tmdb! hora de procurar no meu db!')
             for (const iten of traducoes) {
-                console.log(`O IMDB retornou ${iten.imdbID}`)
                 let movieOnDB = await this.searchOnMyDb(iten.imdbID);
                 if (movieOnDB !== null){
                     for (const movieObject of movieOnDB) {
@@ -95,10 +91,8 @@ export class SearchService {
 
 
     async searchOnOmDb(title: TempSearchDto){
-        console.log(title);
         let details = await this.axios.getDetailedMoviesOnOMDB(title.imdbID);
         const translatedInfo = await this.axios.getTranslatedPlotOnTmdb(title.imdbID);
-        console.log(`translatedTitle  ->> ${translatedInfo.title}  ,  translatedPlot, >>${translatedInfo.overview}<<`)
         if(details.Response !== false){
             const movie = {
                 title: title.title,
@@ -112,8 +106,6 @@ export class SearchService {
                 imdbRating: details.imdbRating? details.imdbRating : "N/A",
                 plot: translatedInfo.overview ? translatedInfo.overview : details.Plot,
             } as SearchDto
-            console.log(" ")
-            console.log("movie.plot ->", movie.plot)
             await this.tempsearchModel.deleteMany({imdbID:movie.imdbID});
             await this.searchModel.create(movie);                
         }

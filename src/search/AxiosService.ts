@@ -15,9 +15,7 @@ export class AxiosService{
     }
 
     async getTranslatedPlotOnTmdb(id:string){
-        console.log(process.env.TMDB_MOVIE_DETAILS_URL + id + process.env.API_KEY + "&" + process.env.TMDB_RESPONSE_LANGUAGE);
         const data = await axios.get(process.env.TMDB_MOVIE_DETAILS_URL + id + process.env.API_KEY + "&" + process.env.TMDB_RESPONSE_LANGUAGE);
-        console.log(" ");
         return data.data;
     }
 
