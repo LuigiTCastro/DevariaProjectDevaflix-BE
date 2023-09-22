@@ -14,9 +14,16 @@ export class AxiosService{
         return data.data;
     }
 
+    async getTranslatedPlotOnTmdb(id:string){
+        console.log(process.env.TMDB_MOVIE_DETAILS_URL + id + process.env.API_KEY + "&" + process.env.TMDB_RESPONSE_LANGUAGE);
+        const data = await axios.get(process.env.TMDB_MOVIE_DETAILS_URL + id + process.env.API_KEY + "&" + process.env.TMDB_RESPONSE_LANGUAGE);
+        console.log(" ");
+        return data.data;
+    }
+
     async getPreviewMoviesOnOMDB(title:TempSearchDto){  
         const data = await axios.get(process.env.OMDB_PUBLIC_URL+ `&i=${title.imdbID}`);
-        if (data.data.Search){
+        if (data.data.Response === 'True'){
             return data.data;
         }else{
             return {title:"N/A"};
@@ -24,7 +31,12 @@ export class AxiosService{
     }
 
     async getDetailedMoviesOnOMDB(imdbId:string){
+        
         const data = await axios.get(process.env.OMDB_PUBLIC_URL+ `&i=${imdbId}`);
-        return data.data;
+        if (data.data.Response !== 'False'){
+            return data.data;
+        }else{
+            return {title:"N/A"};
+        }
     }
 }

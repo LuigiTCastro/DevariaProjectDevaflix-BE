@@ -24,7 +24,7 @@ export class SearchService {
         private logger = new Logger(SearchService.name);
 
     async searchOnMyDb(imdbID:string){
-        const search = await this.searchModel.find({imdbID:{$regex:imdbID}});
+        const search = await this.searchModel.find({imdbID:imdbID});
         if (search.length > 0){
             return search;
         }
@@ -66,14 +66,17 @@ export class SearchService {
     async searchMovie(title:TempSearchDto){
         try{
             this.logger.debug('Procurando filmes!')
+            let contador = 1;
             let movieList = [];
             const traducoes = await this.searchOnTmDb(title);
+            console.log(traducoes)
             this.logger.debug('filmes procurados no tmdb! hora de procurar no meu db!')
             for (const iten of traducoes) {
+                console.log(`O IMDB retornou ${iten.imdbID}`)
                 let movieOnDB = await this.searchOnMyDb(iten.imdbID);
                 if (movieOnDB !== null){
                     for (const movieObject of movieOnDB) {
-                        movieList.push(movieObject);                        
+                        movieList.push(movieObject);
                     }
                 }else{
                     await this.searchOnOmDb(iten)
@@ -92,22 +95,29 @@ export class SearchService {
 
 
     async searchOnOmDb(title: TempSearchDto){
+        console.log(title);
         let details = await this.axios.getDetailedMoviesOnOMDB(title.imdbID);
+        const translatedInfo = await this.axios.getTranslatedPlotOnTmdb(title.imdbID);
+        console.log(`translatedTitle  ->> ${translatedInfo.title}  ,  translatedPlot, >>${translatedInfo.overview}<<`)
+        if(details.Response !== false){
             const movie = {
-                title: details.Title,
-                poster: details.Poster? details.Poster: "N/A",
-                imdbID: title.imdbID? title.imdbID: "N/A",
-                year: details.Year? details.Year: "N/A",
-                genre: details.Genre? details.Genre: "N/A",
-                director: details.Director? details.Director: "N/A",
-                actor: details.Actors? details.Actors: "N/A",
-                imdbRating: details.imdbRating? details.imdbRating: "N/A",
-                plot: details.Plot? details.Plot: "N/A",
+                title: title.title,
+                translatedTitle: translatedInfo.title,
+                poster: details.Poster? details.Poster : "N/A",
+                imdbID: title.imdbID,
+                year: details.Year? details.Year : "N/A",
+                genre: details.Genre? details.Genre : "N/A",
+                director: details.Director? details.Director : "N/A",
+                actor: details.Actors? details.Actors : "N/A",
+                imdbRating: details.imdbRating? details.imdbRating : "N/A",
+                plot: translatedInfo.overview ? translatedInfo.overview : details.Plot,
             } as SearchDto
-            await this.tempsearchModel.deleteMany({title:{$regex:movie.title}});
+            console.log(" ")
+            console.log("movie.plot ->", movie.plot)
+            await this.tempsearchModel.deleteMany({imdbID:movie.imdbID});
             await this.searchModel.create(movie);                
-        // }
-        
+        }
+        return;
     }
 
     async findMoviesbyfilter(filters:any) {

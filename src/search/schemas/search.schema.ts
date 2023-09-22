@@ -9,6 +9,9 @@ export class Search {
     title:string;
 
     @Prop({required: true})
+    translatedTitle:string;
+
+    @Prop({required: true})
     poster:string;
     
     @Prop({required: true})
