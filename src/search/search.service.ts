@@ -105,20 +105,20 @@ export class SearchService {
                 imdbRating: details.imdbRating? details.imdbRating: "N/A",
                 plot: details.Plot? details.Plot: "N/A",
             } as SearchDto
-            await this.tempsearchModel.deleteMany({title:{$regex:movie.title}});
-            await this.searchModel.create(movie);                
+            await this.tempsearchModel.deleteMany({title:{$regex:movie.title}}); // Não entendi o pq do deleteMany.
+            await this.searchModel.create(movie); // Criar regra para verificar se o filme não já existe no db.            
         // }
         
     }
 
     // IMPROVE THE OPERATION
-    // MAKE SEARCH IN THE APIS TOO
+    // MAKE TO SEARCH IN THE APIS TOO
     // FIX THE IMDBRATING VALIDATION
     async findMoviesByFilter(filters:any) {
         try{
             this.logger.debug('Filtrando filmes')
             const query = {};
-            const filterAttributes = ['year','genre', 'director', 'actor', 'imdbRating', 'plot'];
+            const filterAttributes = ['year','genre', 'director', 'actor', 'imdbRating', 'plot']; // Inserir Type?
             for(const attr of filterAttributes){
                 if (filters[attr]){
                     query[attr] = {$regex:filters[attr], $options: 'i'};
@@ -135,6 +135,7 @@ export class SearchService {
         }
     }
 
+    // MAKE TO SEARCH IN THE APIS TOO
     async findRandomMovieFromMyDb() {
         try {
             this.logger.debug('Searching random movie.')
@@ -153,6 +154,44 @@ export class SearchService {
                 throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
             }
 
+            this.logger.debug('Random movie found.')
+            return randomMovie
+        }
+
+        catch(error) {
+            this.logger.error(error)
+        }
+    }
+
+    async findRandomMovieFromApi() {
+        try {
+            this.logger.debug('Searching random movie.')
+
+            // OP1
+                // BUSCAR TODOS OS FILMES DA OMDB (SEM PARAMETROS)
+                // GUARDAR ISSO DENTRO DE UM ARRAY []
+                // GERAR UM NUMERO ALEATORIO (de 0 a Array.Length)
+                // BUSCAR NO ARRAY COM ESSE NUM ALEATORIO
+
+            //OP2
+                // A OMDB no momento possui 2404811 de produções registradas.
+                // Primeiro título: tt0000001 | Último título: tt2404811
+                // Ideia: iterar sobre esse numero (com for, if, [].push)
+
+            const imdbIdList = []
+
+            for (let i = 1; i <= 9999999; i++) {
+                // Formate o número para ter 7 dígitos com zeros à esquerda
+                const paddedNumber = i.toString().padStart(7, '0');
+                const imdbId = `tt${paddedNumber}`;
+                
+                imdbIdList.push(imdbId);
+            }
+
+            const randomIndex = randomInt(0, 2404811) // Aperfeiçoar: (0, imdbIdList.length)
+            // iterar e condicionar para se o resultado for nulo, procurar novamente até encontrar um resultado com dados.
+            const randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomIndex])
+            console.log(imdbIdList[randomIndex])
             this.logger.debug('Random movie found.')
             return randomMovie
         }
