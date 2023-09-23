@@ -58,7 +58,7 @@ export class SearchService {
                     videos:result.video? result.video:"N/A"
                 }
                 tmdbDetails.push(movieObj)
-                await this.tempsearchModel.create(movieObj);
+                await this.tempsearchModel.create(movieObj); // Criar regra para verificar se o titulo não já existe no db.
             }
         }
         return tmdbDetails;
@@ -146,15 +146,17 @@ export class SearchService {
             const imdbIdList = []
 
             for (let i = 1; i <= 9999999; i++) {
-                // Formata o número para ter 7 dígitos com zeros à esquerda
-                const paddedNumber = i.toString().padStart(7, '0');
+                const paddedNumber = i.toString().padStart(7, '0'); // Formata o número para ter sempre 7 dígitos com zeros à esquerda
                 const imdbId = `tt${paddedNumber}`;
-                
                 imdbIdList.push(imdbId);
             }
 
             let randomIndex = randomInt(0, imdbIdList.length)
             let randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomIndex])
+
+            if(!randomMovie) {
+                throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
+            }
 
             if(randomMovie.Response === "False" || randomMovie.Title === "#DUPE#") {
                 while(randomMovie.Response === "False" || randomMovie.Title === "#DUPE#") {
@@ -165,12 +167,20 @@ export class SearchService {
 
             console.log(imdbIdList[randomIndex])
             this.logger.debug('Random movie found.')
-            return randomMovie
-
-            // {
-            //     "Response": "False",
-            //     "Error": "Error getting data."
-            // }
+            const result = {
+                id: randomMovie._id,
+                title: randomMovie.Title,
+                poster: randomMovie.Poster,
+                imdbID: randomMovie.imdbID,
+                year: randomMovie.Year,
+                genre: randomMovie.Genre,
+                director: randomMovie.Director,
+                actor: randomMovie.Actor,
+                imdbRating: randomMovie.imdbRating,
+                plot: randomMovie.Plot,
+                type: randomMovie.Type,
+            } as SearchDto
+            return result
         }
 
         catch(error) {

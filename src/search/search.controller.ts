@@ -32,7 +32,7 @@ export class SearchController {
         }
     }
 
-    @Get('random')
+    @Get('random/db')
     @HttpCode(HttpStatus.OK)
     @IsPublic()
     async getRandomMovieFromMyDb() {
@@ -45,17 +45,17 @@ export class SearchController {
         return randomMovie
     }
 
-    @Get('imdbid')
+    @Get('random/omdb')
     @HttpCode(HttpStatus.OK)
     @IsPublic()
     async getRandomMovieFromOMDB() {
-        const result = await this.searchService.findRandomMovieFromOMDB()
+        const randomMovie = await this.searchService.findRandomMovieFromOMDB()
 
-        if(!result) {
+        if(!randomMovie) {
             throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
         }
 
-        return result
+        return randomMovie
     }
 
 }
