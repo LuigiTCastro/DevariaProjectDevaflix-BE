@@ -133,9 +133,51 @@ export class SearchService {
         }catch(error){
             console.log(error);
         }
+        // MAKE TO SEARCH IN THE APIS TOO
     }
 
-    // MAKE TO SEARCH IN THE APIS TOO
+    // EXCLUIR DA BUSCA FILMES ADULTOS
+    // SEPARAR A BUSCA DE FILMES DA BUSCA DE SERIES?
+    // BUSCAR POR FILMES DE MAIS QUALIDADE
+    async findRandomMovieFromOMDB() {
+        try {
+            this.logger.debug('Searching random movie.')
+
+            const imdbIdList = []
+
+            for (let i = 1; i <= 9999999; i++) {
+                // Formata o número para ter 7 dígitos com zeros à esquerda
+                const paddedNumber = i.toString().padStart(7, '0');
+                const imdbId = `tt${paddedNumber}`;
+                
+                imdbIdList.push(imdbId);
+            }
+
+            let randomIndex = randomInt(0, imdbIdList.length)
+            let randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomIndex])
+
+            if(randomMovie.Response === "False" || randomMovie.Title === "#DUPE#") {
+                while(randomMovie.Response === "False" || randomMovie.Title === "#DUPE#") {
+                    randomIndex = randomInt(0, imdbIdList.length)
+                    randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomIndex])
+                }
+            }
+
+            console.log(imdbIdList[randomIndex])
+            this.logger.debug('Random movie found.')
+            return randomMovie
+
+            // {
+            //     "Response": "False",
+            //     "Error": "Error getting data."
+            // }
+        }
+
+        catch(error) {
+            this.logger.error(error)
+        }
+    }
+
     async findRandomMovieFromMyDb() {
         try {
             this.logger.debug('Searching random movie.')
@@ -154,44 +196,6 @@ export class SearchService {
                 throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
             }
 
-            this.logger.debug('Random movie found.')
-            return randomMovie
-        }
-
-        catch(error) {
-            this.logger.error(error)
-        }
-    }
-
-    async findRandomMovieFromApi() {
-        try {
-            this.logger.debug('Searching random movie.')
-
-            // OP1
-                // BUSCAR TODOS OS FILMES DA OMDB (SEM PARAMETROS)
-                // GUARDAR ISSO DENTRO DE UM ARRAY []
-                // GERAR UM NUMERO ALEATORIO (de 0 a Array.Length)
-                // BUSCAR NO ARRAY COM ESSE NUM ALEATORIO
-
-            //OP2
-                // A OMDB no momento possui 2404811 de produções registradas.
-                // Primeiro título: tt0000001 | Último título: tt2404811
-                // Ideia: iterar sobre esse numero (com for, if, [].push)
-
-            const imdbIdList = []
-
-            for (let i = 1; i <= 9999999; i++) {
-                // Formate o número para ter 7 dígitos com zeros à esquerda
-                const paddedNumber = i.toString().padStart(7, '0');
-                const imdbId = `tt${paddedNumber}`;
-                
-                imdbIdList.push(imdbId);
-            }
-
-            const randomIndex = randomInt(0, 2404811) // Aperfeiçoar: (0, imdbIdList.length)
-            // iterar e condicionar para se o resultado for nulo, procurar novamente até encontrar um resultado com dados.
-            const randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomIndex])
-            console.log(imdbIdList[randomIndex])
             this.logger.debug('Random movie found.')
             return randomMovie
         }

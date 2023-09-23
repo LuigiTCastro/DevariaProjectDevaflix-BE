@@ -48,8 +48,8 @@ export class SearchController {
     @Get('imdbid')
     @HttpCode(HttpStatus.OK)
     @IsPublic()
-    async getRandomMovieFromApi() {
-        const result = await this.searchService.findRandomMovieFromApi()
+    async getRandomMovieFromOMDB() {
+        const result = await this.searchService.findRandomMovieFromOMDB()
 
         if(!result) {
             throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
