@@ -139,6 +139,7 @@ export class SearchService {
     // EXCLUIR DA BUSCA FILMES ADULTOS
     // SEPARAR A BUSCA DE FILMES DA BUSCA DE SERIES?
     // BUSCAR POR FILMES DE MAIS QUALIDADE
+    // BUSCAR NO BANCO, SE NÃO ENCONTRAR, BUSCAR NA OMDB E SALVAR NO BANCO
     async findRandomMovieFromOMDB() {
         try {
             this.logger.debug('Searching random movie.')
@@ -169,6 +170,7 @@ export class SearchService {
             this.logger.debug('Random movie found.')
             const result = {
                 id: randomMovie._id,
+                type: randomMovie.Type,
                 title: randomMovie.Title,
                 poster: randomMovie.Poster,
                 imdbID: randomMovie.imdbID,
@@ -178,7 +180,6 @@ export class SearchService {
                 actor: randomMovie.Actor,
                 imdbRating: randomMovie.imdbRating,
                 plot: randomMovie.Plot,
-                type: randomMovie.Type,
             } as SearchDto
             return result
         }
