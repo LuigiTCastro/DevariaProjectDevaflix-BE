@@ -105,8 +105,10 @@ export class SearchService {
                 imdbRating: details.imdbRating? details.imdbRating: "N/A",
                 plot: details.Plot? details.Plot: "N/A",
             } as SearchDto
-        await this.tempsearchModel.deleteMany({title:{$regex:movie.title}}); // Não entendi o pq do deleteMany.
-        await this.searchModel.create(movie); // Criar regra para verificar se o filme não já existe no db.            
+            await this.tempsearchModel.deleteMany({title:{$regex:movie.title}}); // Não entendi o pq do deleteMany.
+            await this.searchModel.create(movie); // Criar regra para verificar se o filme não já existe no db.            
+        // }
+        
     }
 
     // IMPROVE THE OPERATION
@@ -131,12 +133,12 @@ export class SearchService {
         }catch(error){
             console.log(error);
         }
+        // MAKE TO SEARCH IN THE APIS TOO
     }
 
     // EXCLUIR DA BUSCA FILMES ADULTOS
     // SEPARAR A BUSCA DE FILMES DA BUSCA DE SERIES?
     // BUSCAR POR FILMES DE MAIS QUALIDADE
-    // PROCURAR NO BANCO, SE NÃO ACHAR, PROCURAR NA OMDB, E CADASTRAR NO BANCO
     async findRandomMovieFromOMDB() {
         try {
             this.logger.debug('Searching random movie.')
@@ -165,10 +167,8 @@ export class SearchService {
 
             console.log(imdbIdList[randomIndex])
             this.logger.debug('Random movie found.')
-            
             const result = {
                 id: randomMovie._id,
-                type: randomMovie.Type,
                 title: randomMovie.Title,
                 poster: randomMovie.Poster,
                 imdbID: randomMovie.imdbID,
@@ -178,6 +178,7 @@ export class SearchService {
                 actor: randomMovie.Actor,
                 imdbRating: randomMovie.imdbRating,
                 plot: randomMovie.Plot,
+                type: randomMovie.Type,
             } as SearchDto
             return result
         }
