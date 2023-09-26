@@ -2,29 +2,32 @@ import { IsString } from "class-validator";
 
 export class SearchDto {
     @IsString()
-    title:string;
+    title: string;
 
-    @IsString()    
-    poster:string;
-        
     @IsString()
-    imdbID:string;
-    
-    @IsString() 
-    year:string;
-    
+    translatedTitle: string;
+
     @IsString()
-    genre:string;
-    
+    poster: string;
+
     @IsString()
-    director:string;
-    
+    imdbID: string;
+
     @IsString()
-    actor:string;
-    
+    year: string;
+
     @IsString()
-    imdbRating:string;
-    
-    @IsString()    
-    plot:string;
+    genre: string;
+
+    @IsString()
+    director: string;
+
+    @IsString()
+    actor: string;
+
+    @IsString()
+    imdbRating: string;
+
+    @IsString()
+    plot: string;
 }

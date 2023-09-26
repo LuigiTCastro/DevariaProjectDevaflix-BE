@@ -2,11 +2,11 @@ import { IsString } from "class-validator";
 
 export class TempSearchDto {
     @IsString()
-    title:string;
+    title: string;
 
     @IsString()
-    imdbID:string;
+    imdbID: string;
 
     @IsString()
-    videos:string;
+    videos: string;
 }

@@ -7,13 +7,13 @@ import { TempSearch, TempSearchSchema } from './schemas/tempsearch.schema';
 import { AxiosService } from './AxiosService';
 
 @Module({
-  imports:[
+  imports: [
     MongooseModule.forFeature([
-      { name: Search.name, schema: SearchSchema},
-      { name: TempSearch.name, schema: TempSearchSchema}
+      { name: Search.name, schema: SearchSchema },
+      { name: TempSearch.name, schema: TempSearchSchema }
     ])
   ],
   providers: [SearchService, AxiosService],
   controllers: [SearchController]
 })
-export class SearchModule {}
+export class SearchModule { }
