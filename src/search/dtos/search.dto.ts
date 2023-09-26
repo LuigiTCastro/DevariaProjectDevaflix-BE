@@ -4,9 +4,6 @@ export class SearchDto {
     @IsString()
     title:string;
 
-    @IsString()
-    translatedTitle:string;
-
     @IsString()    
     poster:string;
         

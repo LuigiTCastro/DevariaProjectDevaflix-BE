@@ -8,7 +8,10 @@ import {AxiosService} from './AxiosService';
 import { TempSearchDto } from './dtos/tempsearch.dto';
 import { MovieMessagesHelper } from './helpers/messages.helper';
 import { Logger } from '@nestjs/common';
+import { randomInt } from 'crypto';
 
+
+let spaceSwap = / /gi;
 
 @Injectable()
 export class SearchService {
@@ -22,7 +25,7 @@ export class SearchService {
         private logger = new Logger(SearchService.name);
 
     async searchOnMyDb(imdbID:string){
-        const search = await this.searchModel.find({imdbID:imdbID});
+        const search = await this.searchModel.find({imdbID:{$regex:imdbID}});
         if (search.length > 0){
             return search;
         }
@@ -55,7 +58,7 @@ export class SearchService {
                     videos:result.video? result.video:"N/A"
                 }
                 tmdbDetails.push(movieObj)
-                await this.tempsearchModel.create(movieObj);
+                await this.tempsearchModel.create(movieObj); // Criar regra para verificar se o titulo não já existe no db.
             }
         }
         return tmdbDetails;
@@ -64,7 +67,6 @@ export class SearchService {
     async searchMovie(title:TempSearchDto){
         try{
             this.logger.debug('Procurando filmes!')
-            let contador = 1;
             let movieList = [];
             const traducoes = await this.searchOnTmDb(title);
             this.logger.debug('filmes procurados no tmdb! hora de procurar no meu db!')
@@ -72,7 +74,7 @@ export class SearchService {
                 let movieOnDB = await this.searchOnMyDb(iten.imdbID);
                 if (movieOnDB !== null){
                     for (const movieObject of movieOnDB) {
-                        movieList.push(movieObject);
+                        movieList.push(movieObject);                        
                     }
                 }else{
                     await this.searchOnOmDb(iten)
@@ -92,31 +94,31 @@ export class SearchService {
 
     async searchOnOmDb(title: TempSearchDto){
         let details = await this.axios.getDetailedMoviesOnOMDB(title.imdbID);
-        const translatedInfo = await this.axios.getTranslatedPlotOnTmdb(title.imdbID);
-        if(details.Response !== false){
             const movie = {
-                title: title.title,
-                translatedTitle: translatedInfo.title,
-                poster: details.Poster? details.Poster : "N/A",
-                imdbID: title.imdbID,
-                year: details.Year? details.Year : "N/A",
-                genre: details.Genre? details.Genre : "N/A",
-                director: details.Director? details.Director : "N/A",
-                actor: details.Actors? details.Actors : "N/A",
-                imdbRating: details.imdbRating? details.imdbRating : "N/A",
-                plot: translatedInfo.overview ? translatedInfo.overview : details.Plot,
+                title: details.Title,
+                poster: details.Poster? details.Poster: "N/A",
+                imdbID: title.imdbID? title.imdbID: "N/A",
+                year: details.Year? details.Year: "N/A",
+                genre: details.Genre? details.Genre: "N/A",
+                director: details.Director? details.Director: "N/A",
+                actor: details.Actors? details.Actors: "N/A",
+                imdbRating: details.imdbRating? details.imdbRating: "N/A",
+                plot: details.Plot? details.Plot: "N/A",
             } as SearchDto
-            await this.tempsearchModel.deleteMany({imdbID:movie.imdbID});
-            await this.searchModel.create(movie);                
-        }
-        return;
+            await this.tempsearchModel.deleteMany({title:{$regex:movie.title}}); // Não entendi o pq do deleteMany.
+            await this.searchModel.create(movie); // Criar regra para verificar se o filme não já existe no db.            
+        // }
+        
     }
 
-    async findMoviesbyfilter(filters:any) {
+    // IMPROVE THE OPERATION
+    // MAKE TO SEARCH IN THE APIS TOO
+    // FIX THE IMDBRATING VALIDATION
+    async findMoviesByFilter(filters:any) {
         try{
             this.logger.debug('Filtrando filmes')
             const query = {};
-            const filterAttributes = ['year','genre', 'director', 'actor', 'imdbRating', 'plot'];
+            const filterAttributes = ['year','genre', 'director', 'actor', 'imdbRating', 'plot']; // Inserir Type?
             for(const attr of filterAttributes){
                 if (filters[attr]){
                     query[attr] = {$regex:filters[attr], $options: 'i'};
@@ -130,6 +132,87 @@ export class SearchService {
             return movies;
         }catch(error){
             console.log(error);
+        }
+        // MAKE TO SEARCH IN THE APIS TOO
+    }
+
+    // EXCLUIR DA BUSCA FILMES ADULTOS
+    // SEPARAR A BUSCA DE FILMES DA BUSCA DE SERIES?
+    // BUSCAR POR FILMES DE MAIS QUALIDADE
+    // BUSCAR NO BANCO, SE NÃO ENCONTRAR, BUSCAR NA OMDB E SALVAR NO BANCO
+    async findRandomMovieFromOMDB() {
+        try {
+            this.logger.debug('Searching random movie.')
+
+            const imdbIdList = []
+
+            for (let i = 1; i <= 9999999; i++) {
+                const paddedNumber = i.toString().padStart(7, '0'); // Formata o número para ter sempre 7 dígitos com zeros à esquerda
+                const imdbId = `tt${paddedNumber}`;
+                imdbIdList.push(imdbId);
+            }
+
+            let randomIndex = randomInt(0, imdbIdList.length)
+            let randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomIndex])
+
+            if(!randomMovie) {
+                throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
+            }
+
+            if(randomMovie.Response === "False" || randomMovie.Title === "#DUPE#") {
+                while(randomMovie.Response === "False" || randomMovie.Title === "#DUPE#") {
+                    randomIndex = randomInt(0, imdbIdList.length)
+                    randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomIndex])
+                }
+            }
+
+            console.log(imdbIdList[randomIndex])
+            this.logger.debug('Random movie found.')
+            const result = {
+                id: randomMovie._id,
+                type: randomMovie.Type,
+                title: randomMovie.Title,
+                poster: randomMovie.Poster,
+                imdbID: randomMovie.imdbID,
+                year: randomMovie.Year,
+                genre: randomMovie.Genre,
+                director: randomMovie.Director,
+                actor: randomMovie.Actor,
+                imdbRating: randomMovie.imdbRating,
+                plot: randomMovie.Plot,
+            } as SearchDto
+            return result
+        }
+
+        catch(error) {
+            this.logger.error(error)
+        }
+    }
+
+    async findRandomMovieFromMyDb() {
+        try {
+            this.logger.debug('Searching random movie.')
+
+            const moviesOnDb = await this.searchModel.find()
+            const moviesList = []
+
+            for(const movie of moviesOnDb) {
+                moviesList.push(movie)
+            }
+
+            const randomIndex = randomInt(0,moviesList.length)
+            const randomMovie = moviesList[randomIndex]
+
+            if(!randomMovie) {
+                throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
+            }
+
+            this.logger.debug('Random movie found.')
+            return randomMovie
+        }
+
+        catch(error) {
+            this.logger.error(error)
         }
     }
 }

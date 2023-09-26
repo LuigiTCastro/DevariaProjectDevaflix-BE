@@ -14,14 +14,9 @@ export class AxiosService{
         return data.data;
     }
 
-    async getTranslatedPlotOnTmdb(id:string){
-        const data = await axios.get(process.env.TMDB_MOVIE_DETAILS_URL + id + process.env.API_KEY + "&" + process.env.TMDB_RESPONSE_LANGUAGE);
-        return data.data;
-    }
-
     async getPreviewMoviesOnOMDB(title:TempSearchDto){  
         const data = await axios.get(process.env.OMDB_PUBLIC_URL+ `&i=${title.imdbID}`);
-        if (data.data.Response === 'True'){
+        if (data.data.Search){
             return data.data;
         }else{
             return {title:"N/A"};
@@ -29,12 +24,7 @@ export class AxiosService{
     }
 
     async getDetailedMoviesOnOMDB(imdbId:string){
-        
         const data = await axios.get(process.env.OMDB_PUBLIC_URL+ `&i=${imdbId}`);
-        if (data.data.Response !== 'False'){
-            return data.data;
-        }else{
-            return {title:"N/A"};
-        }
+        return data.data;
     }
 }
