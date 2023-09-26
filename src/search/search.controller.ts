@@ -11,7 +11,7 @@ export class SearchController {
     @IsPublic()
     async getmovie(@Query() movieName){
         const movies = await this.searchService.searchMovie(movieName);
-        if (movies.length < 1){
+        if (movies?.length < 1){
             throw new BadRequestException(process.env.NO_RESULTS_FOUND);
         }else{
             return movies;
@@ -23,7 +23,7 @@ export class SearchController {
     @IsPublic()
     async getFilteredMovies(@Query() filters?:any) {
         const movies = await this.searchService.findMoviesbyfilter(filters);
-        if (movies.length < 1){
+        if (movies?.length < 1){
             throw new BadRequestException(process.env.NO_RESULTS_FOUND);
         }else{
             return movies;
