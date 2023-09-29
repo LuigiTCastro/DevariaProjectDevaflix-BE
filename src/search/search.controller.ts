@@ -1,4 +1,4 @@
-import { Controller, Get, BadRequestException, HttpCode, HttpStatus, Query } from '@nestjs/common';
+import { Controller, Get, BadRequestException, HttpCode, HttpStatus, Query, Put, Param, Request } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { IsPublic } from 'src/auth/decorators/ispublic.decorator';
 import { MovieMessagesHelper } from './helpers/messages.helper';
@@ -55,6 +55,19 @@ export class SearchController {
         }
 
         return randomMovie
+    }
+
+    @Put('like/dislike')
+    @HttpCode(HttpStatus.OK)
+    async putLikeOrDislikeInMovie(@Request() req, @Param('id') movieId: string) {
+        const { loggedUserId } = req?.user
+        const result = await this.searchService.likeOrDislikeMovie(loggedUserId, movieId)
+
+        if(!result) {
+            throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
+        }
+
+        return result
     }
 
 }

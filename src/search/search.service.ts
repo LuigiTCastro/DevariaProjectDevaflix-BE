@@ -221,4 +221,41 @@ export class SearchService {
             this.logger.error(error)
         }
     }
+
+    async likeOrDislikeMovie(loggedUserId: string, movieId: string) {
+        try {
+            this.logger.debug('Procurando filme.')
+
+            // const user = await this.userService.getUserById(loggedUserId)
+            
+            const movie = await this.searchModel.findById(movieId)
+            console.log(movie)
+            
+            const likes = []
+            // movie.likes
+            // likes.findIndex(user._id)
+
+            if(likes.indexOf(loggedUserId) == -1) {
+                likes.push(loggedUserId)
+                this.logger.debug('Filme curtido com sucesso.')
+            }
+            else {
+                likes.splice(likes.indexOf(loggedUserId), 1)
+                this.logger.debug('Filme descurtido com sucesso.')
+            }
+
+            // movie.totalLikes = movie.likes.length()
+            // console.log(movie.totalLikes)
+
+            const updatedMovie = await this.searchModel.findByIdAndUpdate(movieId, {
+                // likes: movie.likes, totalLikes: movie.totalLikes
+            })
+            return updatedMovie
+        }
+
+        catch(error) {
+            console.log(error)
+            this.logger.error(error)
+        }
+    }
 }
