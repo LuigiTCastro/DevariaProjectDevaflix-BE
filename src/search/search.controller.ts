@@ -57,11 +57,11 @@ export class SearchController {
         return randomMovie
     }
 
-    @Put('like/dislike')
+    @Put('like/:id')
     @HttpCode(HttpStatus.OK)
-    async putLikeOrDislikeInMovie(@Request() req, @Param('id') movieId: string) {
-        const { loggedUserId } = req?.user
-        const result = await this.searchService.likeOrDislikeMovie(loggedUserId, movieId)
+    async putLikeOrDislikeMovie(@Request() req, @Param('id') movieId: string) {
+        const { userId } = req?.user
+        const result = await this.searchService.likeOrDislikeMovie(userId, movieId)
 
         if(!result) {
             throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)

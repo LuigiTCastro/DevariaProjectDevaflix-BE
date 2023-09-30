@@ -1,4 +1,4 @@
-import { IsString } from "class-validator";
+import { IsString, IsNumber, IsArray } from "class-validator";
 
 export class SearchDto {
     @IsString()
@@ -27,6 +27,12 @@ export class SearchDto {
 
     @IsString()
     imdbRating: string;
+
+    // @IsArray()
+    // likes: string[];
+
+    // @IsNumber()
+    // totalLikes: number;
 
     @IsString()
     plot: string;

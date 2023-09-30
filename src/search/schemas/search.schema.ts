@@ -32,6 +32,12 @@ export class Search {
     @Prop({ required: true })
     imdbRating: string;
 
+    @Prop({ type: [String], default: [] })
+    likes: string[];
+
+    @Prop({ type: Number, default: 0 })
+    totalLikes: number;
+
     @Prop({ required: true })
     plot: string;
 }

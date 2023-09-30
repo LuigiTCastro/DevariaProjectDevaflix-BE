@@ -9,6 +9,7 @@ import { TempSearchDto } from './dtos/tempsearch.dto';
 import { MovieMessagesHelper } from './helpers/messages.helper';
 import { Logger } from '@nestjs/common';
 import { randomInt } from 'crypto';
+import { UserService } from 'src/user/user.service';
 
 
 @Injectable()
@@ -17,6 +18,7 @@ export class SearchService {
 
         @InjectModel(Search.name) private searchModel: Model<SearchDocument>,
         @InjectModel(TempSearch.name) private tempsearchModel: Model<TempSearchDocument>,
+        private readonly userService: UserService, //ADC NO MODULE
         private readonly axios: AxiosService
     ) { }
 
@@ -104,6 +106,8 @@ export class SearchService {
                 director: details.Director ? details.Director : "N/A",
                 actor: details.Actors ? details.Actors : "N/A",
                 imdbRating: details.imdbRating ? details.imdbRating : "N/A",
+                likes: details.likes,
+                totalLikes: details.totalLikes,
                 plot: translatedInfo.overview ? translatedInfo.overview : details.Plot,
             } as SearchDto
             await this.tempsearchModel.deleteMany({ imdbID: movie.imdbID });  // Não entendi o pq do deleteMany.
@@ -185,6 +189,8 @@ export class SearchService {
                 director: randomMovie.Director,
                 actor: randomMovie.Actor,
                 imdbRating: randomMovie.imdbRating,
+                likes: randomMovie.likes,
+                totalLikes: randomMovie.totalLikes,
                 plot: randomMovie.Plot,
             } as SearchDto
             return result
@@ -221,34 +227,32 @@ export class SearchService {
             this.logger.error(error)
         }
     }
-
+    
+    // async likeOrDislikeMovie(loggedUserId: string, movieId: string, dto: LikeMovieDto) {
     async likeOrDislikeMovie(loggedUserId: string, movieId: string) {
         try {
             this.logger.debug('Procurando filme.')
 
-            // const user = await this.userService.getUserById(loggedUserId)
-            
-            const movie = await this.searchModel.findById(movieId)
-            console.log(movie)
-            
-            const likes = []
-            // movie.likes
-            // likes.findIndex(user._id)
+            const loggedUser = await this.userService.getUserById(loggedUserId)
+            const movie = await this.searchModel.findById({_id: movieId})
 
-            if(likes.indexOf(loggedUserId) == -1) {
-                likes.push(loggedUserId)
+            if(movie.likes.indexOf(loggedUser.id) == -1) {
+                movie.likes.push(loggedUser.id)
                 this.logger.debug('Filme curtido com sucesso.')
             }
             else {
-                likes.splice(likes.indexOf(loggedUserId), 1)
+                movie.likes.splice(movie.likes.indexOf(loggedUser.id), 1)
                 this.logger.debug('Filme descurtido com sucesso.')
             }
 
-            // movie.totalLikes = movie.likes.length()
-            // console.log(movie.totalLikes)
+            movie.totalLikes = movie.likes.length
 
-            const updatedMovie = await this.searchModel.findByIdAndUpdate(movieId, {
-                // likes: movie.likes, totalLikes: movie.totalLikes
+            // movie.likes = dto.likes
+            // movie.totalLikes = dto.totalLikes
+            // const updatedMovie = await this.searchModel.findByIdAndUpdate({ _id: movieId }, movie)            
+            
+            const updatedMovie = await this.searchModel.findByIdAndUpdate(movie._id, {
+                likes: movie.likes, totalLikes: movie.totalLikes
             })
             return updatedMovie
         }
