@@ -34,5 +34,8 @@ export class Search {
 
     @Prop({ required: true })
     plot: string;
+
+    @Prop({ required: true })
+    videos: string;
 }
 export const SearchSchema = SchemaFactory.createForClass(Search);
