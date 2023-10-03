@@ -28,12 +28,6 @@ export class SearchDto {
     @IsString()
     imdbRating: string;
 
-    // @IsArray()
-    // likes: string[];
-
-    // @IsNumber()
-    // totalLikes: number;
-
     @IsString()
     plot: string;
 }

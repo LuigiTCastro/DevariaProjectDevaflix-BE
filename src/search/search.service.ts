@@ -228,8 +228,7 @@ export class SearchService {
         }
     }
     
-    // async likeOrDislikeMovie(loggedUserId: string, movieId: string, dto: LikeMovieDto) {
-    async likeOrDislikeMovie(loggedUserId: string, movieId: string) {
+    async registerLikeOrDislikeMovie(loggedUserId: string, movieId: string) {
         try {
             this.logger.debug('Procurando filme.')
 
@@ -246,15 +245,23 @@ export class SearchService {
             }
 
             movie.totalLikes = movie.likes.length
-
-            // movie.likes = dto.likes
-            // movie.totalLikes = dto.totalLikes
-            // const updatedMovie = await this.searchModel.findByIdAndUpdate({ _id: movieId }, movie)            
             
-            const updatedMovie = await this.searchModel.findByIdAndUpdate(movie._id, {
+            await this.searchModel.findByIdAndUpdate(movie._id, {
                 likes: movie.likes, totalLikes: movie.totalLikes
             })
-            return updatedMovie
+            
+            return movie
+        }
+
+        catch(error) {
+            console.log(error)
+            this.logger.error(error)
+        }
+    }
+
+    async registerDislikeMovie() {
+        try {
+
         }
 
         catch(error) {

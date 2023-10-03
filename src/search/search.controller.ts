@@ -61,7 +61,7 @@ export class SearchController {
     @HttpCode(HttpStatus.OK)
     async putLikeOrDislikeMovie(@Request() req, @Param('id') movieId: string) {
         const { userId } = req?.user
-        const result = await this.searchService.likeOrDislikeMovie(userId, movieId)
+        const result = await this.searchService.registerLikeOrDislikeMovie(userId, movieId)
 
         if(!result) {
             throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
