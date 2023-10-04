@@ -124,7 +124,7 @@ export class SearchService {
         try {
             this.logger.debug('Filtrando filmes')
             const query = {};
-            const filterAttributes = ['year', 'genre', 'director', 'actor', 'imdbRating', 'plot']; // Inserir Type?
+            const filterAttributes = ['year', 'genre', 'director', 'actor', 'imdbRating', 'plot']; // Inserir Type? Other attributes? (runtime)
             
             for (const attr of filterAttributes) {
                 if (filters[attr]) {
@@ -147,8 +147,8 @@ export class SearchService {
 
     // EXCLUIR DA BUSCA FILMES ADULTOS
     // SEPARAR A BUSCA DE FILMES DA BUSCA DE SERIES?
-    // BUSCAR POR FILMES DE MAIS QUALIDADE
-    // BUSCAR NO BANCO, SE NÃO ENCONTRAR, BUSCAR NA OMDB E SALVAR NO BANCO
+    // BUSCAR POR FILMES DE MAIS QUALIDADE (PULAR FILMES COM NOTAS: N/A?)
+    // BUSCAR NO BANCO, SE NÃO ENCONTRAR, BUSCAR NA OMDB E SALVAR NO BANCO?
     async findRandomMovieFromOMDB() {
         try {
             this.logger.debug('Searching random movie.')
@@ -187,10 +187,11 @@ export class SearchService {
                 year: randomMovie.Year,
                 genre: randomMovie.Genre,
                 director: randomMovie.Director,
-                actor: randomMovie.Actor,
+                actor: randomMovie.Actors,
                 imdbRating: randomMovie.imdbRating,
-                likes: randomMovie.likes,
-                totalLikes: randomMovie.totalLikes,
+                runtime: randomMovie.Runtime, // NEW ATTRIBUTE
+                likes: randomMovie.likes, // NAO ESTA RETORNANDO
+                totalLikes: randomMovie.totalLikes, // NAO ESTA RETORNANDO
                 plot: randomMovie.Plot,
             } as SearchDto
             return result
@@ -201,6 +202,7 @@ export class SearchService {
         }
     }
 
+    // ADC O ATRIBUTO RUNTIME?
     async findRandomMovieFromMyDb() {
         try {
             this.logger.debug('Searching random movie.')
@@ -228,6 +230,8 @@ export class SearchService {
         }
     }
     
+
+    // CRIAR SCHEMA LIKE/RATING?
     async registerLikeOrDislikeMovie(loggedUserId: string, movieId: string) {
         try {
             this.logger.debug('Procurando filme.')
