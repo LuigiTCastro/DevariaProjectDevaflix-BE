@@ -19,7 +19,7 @@ export class RatingDto {
     totalDislikes: number
 
     @IsNumber()
-    percentagelLikes: number
+    percentageLikes: number
 
     
    

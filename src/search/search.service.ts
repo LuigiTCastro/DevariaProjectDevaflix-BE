@@ -290,7 +290,7 @@ export class SearchService {
                     totalLikes: 0,
                     dislikes: [],
                     totalDislikes: 0,
-                    percentagelLikes: 0,
+                    percentageLikes: 0,
                 });
                 await obj.save();
             }
@@ -317,5 +317,19 @@ export class SearchService {
         }
     }
 
-    
+    async registerPercentageLikes(movieId: string) {
+        const movie = await this.searchModel.findById({ _id: movieId });
+        let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
+        obj.percentageLikes = (obj.totalLikes / (obj.totalLikes + obj.totalDislikes)) * 100
+
+        await this.ratingModel.findByIdAndUpdate(obj._id, {
+            percentageLikes: obj.percentageLikes
+        })
+
+        console.log(obj.totalLikes)
+        console.log(obj.totalDislikes)
+        console.log(obj.totalLikes + obj.totalDislikes)
+        console.log(obj.percentageLikes)
+        return obj.percentageLikes
+    }
 }

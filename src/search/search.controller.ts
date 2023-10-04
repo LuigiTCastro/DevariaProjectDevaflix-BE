@@ -83,4 +83,16 @@ export class SearchController {
         return result
     }
 
+    @Put('percentage/:id')
+    @HttpCode(HttpStatus.OK)
+    async percentageLikes(@Param('id') movieId: string) {
+        const result = await this.searchService.registerPercentageLikes(movieId)
+
+        if(!result) {
+            throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
+        }
+
+        return result
+    }
+
 }

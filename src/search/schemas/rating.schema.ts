@@ -22,7 +22,7 @@ export class Rating {
     totalDislikes: number
 
     @Prop({ required: true, type: Number, default: 0 })
-    percentagelLikes: number
+    percentageLikes: number
 
 }
 
