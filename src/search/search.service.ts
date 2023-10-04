@@ -10,6 +10,8 @@ import { MovieMessagesHelper } from './helpers/messages.helper';
 import { Logger } from '@nestjs/common';
 import { randomInt } from 'crypto';
 import { UserService } from 'src/user/user.service';
+import { Rating, RatingDocument } from './schemas/rating.schema';
+import { RatingDto } from './dtos/rating.dto';
 
 
 @Injectable()
@@ -18,7 +20,8 @@ export class SearchService {
 
         @InjectModel(Search.name) private searchModel: Model<SearchDocument>,
         @InjectModel(TempSearch.name) private tempsearchModel: Model<TempSearchDocument>,
-        private readonly userService: UserService, //ADC NO MODULE
+        @InjectModel(Rating.name) private ratingModel: Model<RatingDocument>,
+        private readonly userService: UserService,
         private readonly axios: AxiosService
     ) { }
 
@@ -125,7 +128,7 @@ export class SearchService {
             this.logger.debug('Filtrando filmes')
             const query = {};
             const filterAttributes = ['year', 'genre', 'director', 'actor', 'imdbRating', 'plot']; // Inserir Type? Other attributes? (runtime)
-            
+
             for (const attr of filterAttributes) {
                 if (filters[attr]) {
                     query[attr] = { $regex: filters[attr], $options: 'i' };
@@ -139,7 +142,7 @@ export class SearchService {
 
             this.logger.debug('Filtros Aplicados! Retornando resultados!')
             return movies;
-        } 
+        }
         catch (error) {
             console.log(error);
         }
@@ -229,35 +232,44 @@ export class SearchService {
             this.logger.error(error)
         }
     }
-    
 
-    // CRIAR SCHEMA LIKE/RATING?
-    async registerLikeOrDislikeMovie(loggedUserId: string, movieId: string) {
+    async registerLikeMovie(loggedUserId: string, movieId: string) {
         try {
             this.logger.debug('Procurando filme.')
 
-            const loggedUser = await this.userService.getUserById(loggedUserId)
-            const movie = await this.searchModel.findById({_id: movieId})
+            const loggedUser = await this.userService.getUserById(loggedUserId);
+            const movie = await this.searchModel.findById({ _id: movieId });
+            let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
-            if(movie.likes.indexOf(loggedUser.id) == -1) {
-                movie.likes.push(loggedUser.id)
+            if (!obj) {
+                obj = new this.ratingModel({
+                    imdbID: movie.imdbID,
+                    likes: [],
+                    totalLikes: 0,
+                    dislikes: [],
+                    totalDislikes: 0,
+                    percentagelLikes: 0,
+                });
+                await obj.save();
+            }
+            if (obj.likes.indexOf(loggedUser.id) == -1) {
+                obj.likes.push(loggedUser.id)
                 this.logger.debug('Filme curtido com sucesso.')
             }
             else {
-                movie.likes.splice(movie.likes.indexOf(loggedUser.id), 1)
+                obj.likes.splice(obj.likes.indexOf(loggedUser.id), 1)
                 this.logger.debug('Filme descurtido com sucesso.')
             }
 
-            movie.totalLikes = movie.likes.length
-            
-            await this.searchModel.findByIdAndUpdate(movie._id, {
-                likes: movie.likes, totalLikes: movie.totalLikes
+            obj.totalLikes = obj.likes.length
+
+            await this.ratingModel.findByIdAndUpdate(obj._id, {
+                likes: obj.likes, totalLikes: obj.totalLikes
             })
-            
-            return movie
+            return obj
         }
 
-        catch(error) {
+        catch (error) {
             console.log(error)
             this.logger.error(error)
         }
@@ -268,7 +280,7 @@ export class SearchService {
 
         }
 
-        catch(error) {
+        catch (error) {
             console.log(error)
             this.logger.error(error)
         }
