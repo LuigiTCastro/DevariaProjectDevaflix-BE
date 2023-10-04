@@ -275,9 +275,40 @@ export class SearchService {
         }
     }
 
-    async registerDislikeMovie() {
+    async registerDislikeMovie(loggedUserId: string, movieId: string) {
         try {
+            this.logger.debug('Procurando filme.')
 
+            const loggedUser = await this.userService.getUserById(loggedUserId);
+            const movie = await this.searchModel.findById({ _id: movieId });
+            let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
+
+            if (!obj) {
+                obj = new this.ratingModel({
+                    imdbID: movie.imdbID,
+                    likes: [],
+                    totalLikes: 0,
+                    dislikes: [],
+                    totalDislikes: 0,
+                    percentagelLikes: 0,
+                });
+                await obj.save();
+            }
+            if (obj.dislikes.indexOf(loggedUser.id) == -1) {
+                obj.dislikes.push(loggedUser.id)
+                this.logger.debug('Filme curtido com sucesso.')
+            }
+            else {
+                obj.dislikes.splice(obj.dislikes.indexOf(loggedUser.id), 1)
+                this.logger.debug('Filme descurtido com sucesso.')
+            }
+
+            obj.totalDislikes = obj.dislikes.length
+
+            await this.ratingModel.findByIdAndUpdate(obj._id, {
+                dislikes: obj.dislikes, totalDislikes: obj.totalDislikes
+            })
+            return obj
         }
 
         catch (error) {
@@ -285,4 +316,6 @@ export class SearchService {
             this.logger.error(error)
         }
     }
+
+    
 }
