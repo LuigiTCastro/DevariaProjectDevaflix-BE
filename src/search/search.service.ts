@@ -59,20 +59,20 @@ export class SearchService {
         let tmdbDetails = [];
         const titleList = await this.axios.getNamesListOnTMDB(title);
         for (const title of titleList) {
-            // console.log(typeof(title.id))
             const mediaType= {
                 id: title.id.toString(),
                 type:title.media_type,
-                name:title.name?title.name :title.title
+                name:title.name ? title.name : title.title
             }
             idsOnTMDB.push(mediaType);
         }
         for (const id of idsOnTMDB) {
-            let result;
-            let trailers = [];
-            if (id.type == "movie"){
-                result = await this.axios.getMovieByIdsOnTMDB(id.id);
-                const searchTrailers = await this.axios.getMovieTrailer(id.id);
+            if( id.type !== 'person'){
+                let result;
+                let trailers = [];
+                if (id.type == "movie"){
+                    result = await this.axios.getMovieByIdsOnTMDB(id.id);
+                    const searchTrailers = await this.axios.getMovieTrailer(id.id);
                     for (const trailer of searchTrailers) {
                         if (trailer.site === "YouTube"){
                             trailers.push(`https://www.youtube.com/watch?v=${trailer.key} `);
@@ -80,65 +80,64 @@ export class SearchService {
                             trailers.push(`Site:${trailer.site}, Key:${trailer.key} `);
                         }
                     }
-            }
-            if (id.type == "tv"){
-                result = await this.axios.getSeriesByIdsOnTMDB(id.id);
-                const searchTrailers = await this.axios.getSeriesTrailer(id.id);
-                    for (const trailer of searchTrailers) {
-                        if (trailer.site === "YouTube"){
-                            trailers.push(`https://www.youtube.com/watch?v=${trailer.key} `);
-                        }else{
-                            trailers.push(`Site:${trailer.site}, Key:${trailer.key} `);
-                        }
-                    }
-            }
-            if (!result.imdb_id){
-                const ttId = await this.axios.getTtIdSeriesfromOmdb(id.name);
-                if (ttId.Response !== 'False') {
-                    const imdb_id = ttId.Search[0].imdbID;
-                    const tmdbId = id.id;
-                    result = this.newObjectModel(result, imdb_id, tmdbId)
                 }
-            }
-            if (result?.status !== "Planned" && result.imdb_id !== null && result.imdb_id?.length > 0) {
+                if (id.type == "tv"){
+                    result = await this.axios.getSeriesByIdsOnTMDB(id.id);
+                    const searchTrailers = await this.axios.getSeriesTrailer(id.id);
+                    for (const trailer of searchTrailers) {
+                        if (trailer.site === "YouTube"){
+                            trailers.push(`https://www.youtube.com/watch?v=${trailer.key} `);
+                        }else{
+                            trailers.push(`Site:${trailer.site}, Key:${trailer.key} `);
+                        }
+                    }
+                }
+
+                if (!result.imdb_id){
+                    const ttId = await this.axios.getTtIdSeriesfromOmdb(id.name);
+                    if (ttId.Response !== 'False') {
+                        const imdb_id = ttId.Search[0].imdbID;
+                        const tmdbId = id.id;
+                        result = this.newObjectModel(result, imdb_id, tmdbId)
+                    }
+                }
+                if (result?.status !== "Planned" && result.imdb_id !== null && result.imdb_id?.length > 0) {
                     const movieObj = {
-                        title: result.title,
+                        title: result.title? result.title: id.name,
                         type: id.type,
-                        imdbID: result.imdb_id,
+                        imdbID: result.imdb_id? result.imdb_id : id.imdbID,
                         tmdbId:id.id,
                         videos: trailers.toString() ? trailers.toString() : "N/A"
                     }
                     tmdbDetails.push(movieObj)
                     await this.tempsearchModel.create(movieObj); // Criar regra para demonstrar que esses objetos não contem informações minimas para retornar um objeto valido.
                 }
-            //}
+            }
         }
         return tmdbDetails;
     }
 
     async searchMovie(title:TempSearchDto){
         try{
-            this.logger.debug('Procurando filmes!')
+            this.logger.debug(`Procurando filmes relacionados a ${title.title} .`)
             let movieList = [];
             const traducoes = await this.searchOnTmDb(title);
-            this.logger.debug('filmes procurados no tmdb! hora de procurar no meu db!')
+            this.logger.debug(`${traducoes.length} filmes encontrados no tmdb! hora de procurar no meu db!`)
             for (const iten of traducoes) {
                 let movieOnDB = await this.searchOnMyDb(iten.imdbID);
                 if (movieOnDB !== null){
                     for (const movieObject of movieOnDB) {
                         movieList.push(movieObject);
-                        console.log(movieObject.title)
                     }
                 }else{
                     await this.searchOnOmDb(iten)
                     movieOnDB = await this.searchOnMyDb(iten.imdbID);
                     for (const movieObject of movieOnDB) {
-                        console.log(movieObject.title)
                         movieList.push(movieObject);                        
                     }
                 }
             }
-            this.logger.debug('Busca finalizada! Retornando resultados!')
+            this.logger.debug(`Busca finalizada! Retornando ${movieList?.length} resultados!`)
             return movieList;
         }catch (error){
             console.log(error);
@@ -184,7 +183,7 @@ export class SearchService {
             if (!movies){
                 throw new BadRequestException(MovieMessagesHelper.MOVIE_NOT_FOUND);
             }
-            this.logger.debug('Filtros Aplicados! Retornando resultados!')
+            this.logger.debug(`Filtros Aplicados! Retornando ${movies?.length} resultados!`)
             return movies;
         }catch(error){
             console.log(error);
