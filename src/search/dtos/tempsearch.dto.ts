@@ -10,6 +10,9 @@ export class TempSearchDto {
     @IsString()
     imdbID: string;
 
+    @IsString()
+    tmdbId: string;
+
     @IsArray()
     @IsString({ each: true })
     @ArrayMinSize(1)

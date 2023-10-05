@@ -12,7 +12,7 @@ export class AxiosService {
 
     async getMovieByIdsOnTMDB(id: string) {  // pegar o objeto do movie pelo id
         // console.log(process.env.TMDB_MOVIE_DETAILS_URL + `${id}&` + process.env.API_KEY);
-        const data = await axios.get(process.env.TMDB_MOVIE_DETAILS_URL + `${id}&` + process.env.API_KEY);
+        const data = await axios.get(process.env.TMDB_MOVIE_DETAILS_URL + `movie/${id}&` + process.env.API_KEY);
         // console.log("get movie by id on tmdb",data.data);
         return data.data;
     }
@@ -25,7 +25,7 @@ export class AxiosService {
     }
     async getMovieTrailer(id: string){  // busca trailer de filmes
         // console.log(process.env.TMDB_MOVIE_DETAILS_URL + `${id}/videos` + process.env.API_KEY );
-        const data = await axios.get(process.env.TMDB_MOVIE_DETAILS_URL + `${id}/videos` + process.env.API_KEY );
+        const data = await axios.get(process.env.TMDB_MOVIE_DETAILS_URL + `movie/${id}/videos` + process.env.API_KEY );
         return data.data.results;
     }
 
@@ -37,8 +37,11 @@ export class AxiosService {
         return data.data.results;
     }
 
-    async getTranslatedPlotOnTmdb(id: string) {
-        const data = await axios.get(process.env.TMDB_MOVIE_DETAILS_URL + id + process.env.API_KEY + "&" + process.env.TMDB_RESPONSE_LANGUAGE);
+    async getTranslatedPlotOnTmdb(title: TempSearchDto) {
+        console.log("Title dentro do Axios Service ", title)
+        const url = process.env.TMDB_MOVIE_DETAILS_URL + title.type + "/" + title.tmdbId + process.env.API_KEY + "&" + process.env.TMDB_RESPONSE_LANGUAGE
+        console.log(url);
+        const data = await axios.get(url);
         return data.data;
     }
 
@@ -52,13 +55,12 @@ export class AxiosService {
     }
 
     async getTtIdSeriesfromOmdb(title:string){
-        console.log(process.env.OMDB_PUBLIC_URL + `&s=${title}`);
+        // console.log(process.env.OMDB_PUBLIC_URL + `&s=${title}`);
         const data = await axios.get(process.env.OMDB_PUBLIC_URL + `&s=${title}`);
         return data.data;
     }
 
     async getDetailedMoviesOnOMDB(imdbId: string) {
-
         const data = await axios.get(process.env.OMDB_PUBLIC_URL + `&i=${imdbId}`);
         if (data.data.Response !== 'False') {
             return data.data;

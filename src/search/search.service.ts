@@ -40,28 +40,33 @@ export class SearchService {
         return movieList;
     }
     
+    newObjectModel (objeto1, imdbId, id){
+        const restult = {
+            name:objeto1.name,
+            title:objeto1.name,
+            type:'tv',
+            status:objeto1.status,
+            imdb_id:imdbId,
+            id:id,
+            videos:"N]A"
+        };
+
+        return restult;
+
+    }
     async searchOnTmDb(title: TempSearchDto){
         let idsOnTMDB = [];
         let tmdbDetails = [];
         const titleList = await this.axios.getNamesListOnTMDB(title);
         for (const title of titleList) {
-            console.log("1 ---- Media_Type",title.media_type)
-            console.log("2 ---- ID ",title.id)
-            if(title.media_type == "tv"){
-                console.log("3 ---- NAME ",title.name)
-            }else{
-                console.log("3 ---- NAME ",title.title)
-            }
-            console.log("---------------------------------------------------------")
-            console.log(" ")
+            // console.log(typeof(title.id))
             const mediaType= {
-                id: title.id,
+                id: title.id.toString(),
                 type:title.media_type,
                 name:title.name?title.name :title.title
             }
             idsOnTMDB.push(mediaType);
         }
-        // console.log(idsOnTMDB);
         for (const id of idsOnTMDB) {
             let result;
             let trailers = [];
@@ -88,31 +93,23 @@ export class SearchService {
                     }
             }
             if (!result.imdb_id){
-                console.log("NÃO TEM TtId",result.imdb_id)
                 const ttId = await this.axios.getTtIdSeriesfromOmdb(id.name);
-                console.log("Response ",ttId.Response)
                 if (ttId.Response !== 'False') {
-                    console.log(result)
-                    const imdb_id = {imdb_id:ttId.Search[0].imdbID}
-                    console.log(imdb_id)
-                    result = result + imdb_id
-                    console.log(result)
-                    console.log("BUsca na OMDB pelo titulo para apresentação do TT ID", ttId.Search[0].imdbID)
-                    console.log("AGORA TEM TtId!",result.imdb_id)
+                    const imdb_id = ttId.Search[0].imdbID;
+                    const tmdbId = id.id;
+                    result = this.newObjectModel(result, imdb_id, tmdbId)
                 }
-                console.log("____________________________________________________________________", )
             }
-
             if (result?.status !== "Planned" && result.imdb_id !== null && result.imdb_id?.length > 0) {
-                    console.log(`type = ${id.type},     id = ${id.id},      status = ${result.status}`)
                     const movieObj = {
                         title: result.title,
                         type: id.type,
                         imdbID: result.imdb_id,
+                        tmdbId:id.id,
                         videos: trailers.toString() ? trailers.toString() : "N/A"
                     }
                     tmdbDetails.push(movieObj)
-                    await this.tempsearchModel.create(movieObj); // Criar regra para verificar se o titulo não já existe no db.
+                    await this.tempsearchModel.create(movieObj); // Criar regra para demonstrar que esses objetos não contem informações minimas para retornar um objeto valido.
                 }
             //}
         }
@@ -122,21 +119,21 @@ export class SearchService {
     async searchMovie(title:TempSearchDto){
         try{
             this.logger.debug('Procurando filmes!')
-            let contador = 1;
             let movieList = [];
             const traducoes = await this.searchOnTmDb(title);
-            console.log("Traduções  --- > ",traducoes);
             this.logger.debug('filmes procurados no tmdb! hora de procurar no meu db!')
             for (const iten of traducoes) {
                 let movieOnDB = await this.searchOnMyDb(iten.imdbID);
                 if (movieOnDB !== null){
                     for (const movieObject of movieOnDB) {
                         movieList.push(movieObject);
+                        console.log(movieObject.title)
                     }
                 }else{
                     await this.searchOnOmDb(iten)
                     movieOnDB = await this.searchOnMyDb(iten.imdbID);
                     for (const movieObject of movieOnDB) {
+                        console.log(movieObject.title)
                         movieList.push(movieObject);                        
                     }
                 }
@@ -150,12 +147,13 @@ export class SearchService {
 
 
     async searchOnOmDb(title: TempSearchDto){
+        let translatedInfo;
         let details = await this.axios.getDetailedMoviesOnOMDB(title.imdbID);
-        const translatedInfo = await this.axios.getTranslatedPlotOnTmdb(title.imdbID);
+        translatedInfo = await this.axios.getTranslatedPlotOnTmdb(title);
         if(details.Response !== false){
             const movie = {
                 title: title.title,
-                translatedTitle: translatedInfo.title,
+                translatedTitle: translatedInfo.title? translatedInfo.title: translatedInfo.name,
                 poster: details.Poster? details.Poster : "N/A",
                 imdbID: title.imdbID,
                 year: details.Year? details.Year : "N/A",
@@ -223,7 +221,6 @@ export class SearchService {
                 }
             }
 
-            console.log(imdbIdList[randomIndex])
             this.logger.debug('Random movie found.')
             const result = {
                 id: randomMovie._id,
@@ -274,4 +271,15 @@ export class SearchService {
             this.logger.error(error)
         }
     }
+
+    async likeTitle(id:string){
+
+        console.log ("curtiu ")
+    }
+
+    async dislikeTitle(id:string){
+
+        console.log ("curtiu ")
+    }
+    
 }

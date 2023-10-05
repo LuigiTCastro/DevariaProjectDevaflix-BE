@@ -14,6 +14,9 @@ export class TempSearch {
     @Prop({required: true})
     imdbID: string;
 
+    @Prop({})
+    tmdbId: string;
+
     @Prop({required: true})
     videos: string;
 }

@@ -1,4 +1,4 @@
-import {Controller, Get, BadRequestException, HttpCode, HttpStatus, Query} from '@nestjs/common';
+import {Controller, Put, Get, BadRequestException, HttpCode, HttpStatus, Query} from '@nestjs/common';
 import { SearchService } from './search.service';
 import { IsPublic } from 'src/auth/decorators/ispublic.decorator';
 import { MovieMessagesHelper } from './helpers/messages.helper';
@@ -56,6 +56,20 @@ export class SearchController {
         }
 
         return randomMovie
+    }
+
+    @Put('likes/')
+    async putTitleLikes(@Query() id?:string) {
+        await this.searchService.likeTitle(id);
+      
+        return 
+    }
+
+    @Put('dislikes/')
+    async putTitleDislikes(@Query() id?:string) {
+        await this.searchService.dislikeTitle(id);
+      
+        return 
     }
 
 }
