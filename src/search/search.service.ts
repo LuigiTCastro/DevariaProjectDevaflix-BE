@@ -9,7 +9,6 @@ import { TempSearchDto } from './dtos/tempsearch.dto';
 import { MovieMessagesHelper } from './helpers/messages.helper';
 import { Logger } from '@nestjs/common';
 import { randomInt } from 'crypto';
-import { UserService } from 'src/user/user.service';
 import { Rating, RatingDocument } from './schemas/rating.schema';
 import { RatingDto } from './dtos/rating.dto';
 
@@ -21,7 +20,6 @@ export class SearchService {
         @InjectModel(Search.name) private searchModel: Model<SearchDocument>,
         @InjectModel(TempSearch.name) private tempsearchModel: Model<TempSearchDocument>,
         @InjectModel(Rating.name) private ratingModel: Model<RatingDocument>,
-        private readonly userService: UserService,
         private readonly axios: AxiosService
     ) { }
 
@@ -236,8 +234,6 @@ export class SearchService {
     async registerLikeMovie(loggedUserId: string, movieId: string) {
         try {
             this.logger.debug('Procurando filme.')
-
-            const loggedUser = await this.userService.getUserById(loggedUserId);
             const movie = await this.searchModel.findById({ _id: movieId });
             let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
@@ -252,20 +248,25 @@ export class SearchService {
                 });
                 await obj.save();
             }
-            if (obj.likes.indexOf(loggedUser.id) == -1) {
-                obj.likes.push(loggedUser.id)
-                this.logger.debug('Filme curtido com sucesso.')
+
+            if(obj.dislikes.indexOf(loggedUserId) != -1) {
+                obj.dislikes.splice(obj.dislikes.indexOf(loggedUserId), 1)
+            }
+
+            if (obj.likes.indexOf(loggedUserId) == -1) {
+                obj.likes.push(loggedUserId)
+                this.logger.debug('Like registrado com sucesso.')
             }
             else {
-                obj.likes.splice(obj.likes.indexOf(loggedUser.id), 1)
-                this.logger.debug('Filme descurtido com sucesso.')
+                obj.likes.splice(obj.likes.indexOf(loggedUserId), 1)
+                this.logger.debug('Like removido com sucesso.')
             }
 
-            obj.totalLikes = obj.likes.length
-
             await this.ratingModel.findByIdAndUpdate(obj._id, {
-                likes: obj.likes, totalLikes: obj.totalLikes
+                likes: obj.likes, totalLikes: obj.likes.length,
+                dislikes: obj.dislikes, totalDislikes: obj.dislikes.length
             })
+            await this.registerPercentageLikes(movieId)
             return obj
         }
 
@@ -275,11 +276,35 @@ export class SearchService {
         }
     }
 
+    
+        // CURTIR OU DESCURTIR UM OBJETO
+        // P/ CURTIR: VERIFICAR SE JA HA O USERID EM CURTIDAS E EM DESCURTIDAS
+            // SE NAO HOUVER USERID EM DESCURTIDAS:
+                // VERIFICAR SE HA USERID EM CURTIDAS
+                    // SE NAO HOUVER USERID EM CURTIDAS: ADC USERID EM CURTIDAS
+                    // SE HOUVER USERID EM CURTIDAS: REMOVER USERID DE CURTIDAS
+            // SE HOUVER USERID EM DESCURTIDAS:
+                // REMOVER USERID DE DESCURTIDAS
+                // VERIFICAR SE HA USERID EM CURTIDAS
+                    // SE NAO HOUVER USERID EM CURTIDAS: ADC USERID EM CURTIDAS
+                    // SE HOUVER USERID EM CURTIDAS: REMOVER USERID DE CURTIDAS
+            // UPDATE...
+        
+        // P/ DESCURTIR: VERIFICAR SE JA HA O USERID EM CURTIDAS E EM DESCURTIDAS
+            // SE NAO HOUVER USERID EM CURTIDAS:
+                // VERIFICAR SE HA USERID EM DESCURTIDAS
+                    // SE NAO HOUVER USERID EM DESCURTIDAS: ADC USERID EM DESCURTIDAS
+                    // SE HOUVER USERID EM DESCURTIDAS: REMOVER USERID DE DESCURTIDAS
+            // SE HOUVER USERID EM CURTIDAS:
+                // REMOVER USERID DE CURTIDAS
+                // VERIFICAR SE HA USERID EM DESCURTIDAS
+                    // SE NAO HOUVER USERID EM DESCURTIDAS: ADC USERID EM DESCURTIDAS
+                    // SE HOUVER USERID EM DESCURTIDAS: REMOVER USERID DE DESCURTIDAS
+            // UPDATE...
+
     async registerDislikeMovie(loggedUserId: string, movieId: string) {
         try {
             this.logger.debug('Procurando filme.')
-
-            const loggedUser = await this.userService.getUserById(loggedUserId);
             const movie = await this.searchModel.findById({ _id: movieId });
             let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
@@ -294,20 +319,25 @@ export class SearchService {
                 });
                 await obj.save();
             }
-            if (obj.dislikes.indexOf(loggedUser.id) == -1) {
-                obj.dislikes.push(loggedUser.id)
-                this.logger.debug('Filme curtido com sucesso.')
+
+            if(obj.likes.indexOf(loggedUserId) != -1) {
+                obj.likes.splice(obj.likes.indexOf(loggedUserId), 1)
+            }
+
+            if (obj.dislikes.indexOf(loggedUserId) == -1) {
+                obj.dislikes.push(loggedUserId)
+                this.logger.debug('Dislike registrado com sucesso.')
             }
             else {
-                obj.dislikes.splice(obj.dislikes.indexOf(loggedUser.id), 1)
-                this.logger.debug('Filme descurtido com sucesso.')
+                obj.dislikes.splice(obj.dislikes.indexOf(loggedUserId), 1)
+                this.logger.debug('Dislike removido com sucesso.')
             }
 
-            obj.totalDislikes = obj.dislikes.length
-
             await this.ratingModel.findByIdAndUpdate(obj._id, {
-                dislikes: obj.dislikes, totalDislikes: obj.totalDislikes
+                dislikes: obj.dislikes, totalDislikes: obj.dislikes.length,
+                likes: obj.likes, totalLikes: obj.likes.length
             })
+            await this.registerPercentageLikes(movieId)
             return obj
         }
 
@@ -325,11 +355,6 @@ export class SearchService {
         await this.ratingModel.findByIdAndUpdate(obj._id, {
             percentageLikes: obj.percentageLikes
         })
-
-        console.log(obj.totalLikes)
-        console.log(obj.totalDislikes)
-        console.log(obj.totalLikes + obj.totalDislikes)
-        console.log(obj.percentageLikes)
         return obj.percentageLikes
     }
 }
