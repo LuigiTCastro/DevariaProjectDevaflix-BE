@@ -59,7 +59,7 @@ export class SearchController {
 
     @Put('like/:id')
     @HttpCode(HttpStatus.OK)
-    async putLikeOrDislikeMovie(@Request() req, @Param('id') movieId: string) {
+    async putLikeMovie(@Request() req, @Param('id') movieId: string) {
         const { userId } = req?.user
         const result = await this.searchService.registerLikeMovie(userId, movieId)
 

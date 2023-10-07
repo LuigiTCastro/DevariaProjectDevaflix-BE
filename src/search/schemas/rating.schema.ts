@@ -9,6 +9,9 @@ export class Rating {
     @Prop({ required: true })
     imdbID: string
 
+    @Prop({ required: true })
+    title: string
+
     @Prop({ required: true, type: [String], default: [] })
     likes: string[]
 
