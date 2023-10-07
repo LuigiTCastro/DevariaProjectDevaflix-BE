@@ -262,9 +262,12 @@ export class SearchService {
                 this.logger.debug('Like removido com sucesso.')
             }
 
+            obj.totalLikes = obj.likes.length
+            obj.totalDislikes = obj.dislikes.length
+
             await this.ratingModel.findByIdAndUpdate(obj._id, {
-                likes: obj.likes, totalLikes: obj.likes.length,
-                dislikes: obj.dislikes, totalDislikes: obj.dislikes.length
+                likes: obj.likes, totalLikes: obj.totalLikes,
+                dislikes: obj.dislikes, totalDislikes: obj.totalDislikes
             })
             await this.registerPercentageLikes(movieId)
             return obj
@@ -275,32 +278,6 @@ export class SearchService {
             this.logger.error(error)
         }
     }
-
-    
-        // CURTIR OU DESCURTIR UM OBJETO
-        // P/ CURTIR: VERIFICAR SE JA HA O USERID EM CURTIDAS E EM DESCURTIDAS
-            // SE NAO HOUVER USERID EM DESCURTIDAS:
-                // VERIFICAR SE HA USERID EM CURTIDAS
-                    // SE NAO HOUVER USERID EM CURTIDAS: ADC USERID EM CURTIDAS
-                    // SE HOUVER USERID EM CURTIDAS: REMOVER USERID DE CURTIDAS
-            // SE HOUVER USERID EM DESCURTIDAS:
-                // REMOVER USERID DE DESCURTIDAS
-                // VERIFICAR SE HA USERID EM CURTIDAS
-                    // SE NAO HOUVER USERID EM CURTIDAS: ADC USERID EM CURTIDAS
-                    // SE HOUVER USERID EM CURTIDAS: REMOVER USERID DE CURTIDAS
-            // UPDATE...
-        
-        // P/ DESCURTIR: VERIFICAR SE JA HA O USERID EM CURTIDAS E EM DESCURTIDAS
-            // SE NAO HOUVER USERID EM CURTIDAS:
-                // VERIFICAR SE HA USERID EM DESCURTIDAS
-                    // SE NAO HOUVER USERID EM DESCURTIDAS: ADC USERID EM DESCURTIDAS
-                    // SE HOUVER USERID EM DESCURTIDAS: REMOVER USERID DE DESCURTIDAS
-            // SE HOUVER USERID EM CURTIDAS:
-                // REMOVER USERID DE CURTIDAS
-                // VERIFICAR SE HA USERID EM DESCURTIDAS
-                    // SE NAO HOUVER USERID EM DESCURTIDAS: ADC USERID EM DESCURTIDAS
-                    // SE HOUVER USERID EM DESCURTIDAS: REMOVER USERID DE DESCURTIDAS
-            // UPDATE...
 
     async registerDislikeMovie(loggedUserId: string, movieId: string) {
         try {
@@ -333,9 +310,12 @@ export class SearchService {
                 this.logger.debug('Dislike removido com sucesso.')
             }
 
+            obj.totalDislikes = obj.dislikes.length
+            obj.totalLikes = obj.likes.length
+
             await this.ratingModel.findByIdAndUpdate(obj._id, {
-                dislikes: obj.dislikes, totalDislikes: obj.dislikes.length,
-                likes: obj.likes, totalLikes: obj.likes.length
+                dislikes: obj.dislikes, totalDislikes: obj.totalDislikes,
+                likes: obj.likes, totalLikes: obj.totalLikes
             })
             await this.registerPercentageLikes(movieId)
             return obj
