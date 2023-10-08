@@ -34,7 +34,7 @@ export class SearchService {
     }
 
     async getNamesUsingTmdb(title: TempSearchDto) {
-        const movieNames = await this.axios.getMovieNamesOnTMDB(title);
+        const movieNames = await this.axios.getNamesListOnTMDB(title);
         let movieList = [];
         for (const iten of movieNames) {
             const movie = { title: iten.title }
@@ -42,35 +42,90 @@ export class SearchService {
         }
         return movieList;
     }
+    
+    newObjectModel (objeto1, imdbId, id){
+        const restult = {
+            name:objeto1.name,
+            title:objeto1.name,
+            type:'tv',
+            status:objeto1.status,
+            imdb_id:imdbId,
+            id:id,
+            videos:"N]A"
+        };
 
-    async searchOnTmDb(title: TempSearchDto) {
+        return restult;
+
+    }
+    async searchOnTmDb(title: TempSearchDto){
         let idsOnTMDB = [];
         let tmdbDetails = [];
-        const movieList = await this.axios.getMovieNamesOnTMDB(title);
-        for (const movie of movieList) {
-            idsOnTMDB.push(movie.id);
+        const titleList = await this.axios.getNamesListOnTMDB(title);
+        for (const title of titleList) {
+            const mediaType= {
+                id: title.id.toString(),
+                type:title.media_type,
+                name:title.name ? title.name : title.title
+            }
+            idsOnTMDB.push(mediaType);
         }
         for (const id of idsOnTMDB) {
-            const result = await this.axios.getMovieByIdsOnTMDB(id);
-            if (result.status == "Released" && result.imdb_id !== null && result.imdb_id.length > 0) {
-                const movieObj = {
-                    title: result.title,
-                    imdbID: result.imdb_id ? result.imdb_id : " ",
-                    videos: result.video ? result.video : "N/A"
+            if( id.type !== 'person'){
+                let result;
+                let trailers = [];
+                if (id.type == "movie"){
+                    result = await this.axios.getMovieByIdsOnTMDB(id.id);
+                    const searchTrailers = await this.axios.getMovieTrailer(id.id);
+                    for (const trailer of searchTrailers) {
+                        if (trailer.site === "YouTube"){
+                            trailers.push(`https://www.youtube.com/watch?v=${trailer.key} `);
+                        }else{
+                            trailers.push(`Site:${trailer.site}, Key:${trailer.key} `);
+                        }
+                    }
                 }
-                tmdbDetails.push(movieObj)
-                await this.tempsearchModel.create(movieObj); // Criar regra para verificar se o titulo não já existe no db.
+                if (id.type == "tv"){
+                    result = await this.axios.getSeriesByIdsOnTMDB(id.id);
+                    const searchTrailers = await this.axios.getSeriesTrailer(id.id);
+                    for (const trailer of searchTrailers) {
+                        if (trailer.site === "YouTube"){
+                            trailers.push(`https://www.youtube.com/watch?v=${trailer.key} `);
+                        }else{
+                            trailers.push(`Site:${trailer.site}, Key:${trailer.key} `);
+                        }
+                    }
+                }
+
+                if (!result.imdb_id){
+                    const ttId = await this.axios.getTtIdSeriesfromOmdb(id.name);
+                    if (ttId.Response !== 'False') {
+                        const imdb_id = ttId.Search[0].imdbID;
+                        const tmdbId = id.id;
+                        result = this.newObjectModel(result, imdb_id, tmdbId)
+                    }
+                }
+                if (result?.status !== "Planned" && result.imdb_id !== null && result.imdb_id?.length > 0) {
+                    const movieObj = {
+                        title: result.title? result.title: id.name,
+                        type: id.type,
+                        imdbID: result.imdb_id? result.imdb_id : id.imdbID,
+                        tmdbId:id.id,
+                        videos: trailers.toString() ? trailers.toString() : "N/A"
+                    }
+                    tmdbDetails.push(movieObj)
+                    await this.tempsearchModel.create(movieObj); // Criar regra para demonstrar que esses objetos não contem informações minimas para retornar um objeto valido.
+                }
             }
         }
         return tmdbDetails;
     }
 
-    async searchMovie(title: TempSearchDto) {
-        try {
-            this.logger.debug('Procurando filmes!')
+    async searchMovie(title:TempSearchDto){
+        try{
+            this.logger.debug(`Procurando filmes relacionados a ${title.title} .`)
             let movieList = [];
             const traducoes = await this.searchOnTmDb(title);
-            this.logger.debug('filmes procurados no tmdb! hora de procurar no meu db!')
+            this.logger.debug(`${traducoes.length} filmes encontrados no tmdb! hora de procurar no meu db!`)
             for (const iten of traducoes) {
                 let movieOnDB = await this.searchOnMyDb(iten.imdbID);
                 if (movieOnDB !== null) {
@@ -85,7 +140,7 @@ export class SearchService {
                     }
                 }
             }
-            this.logger.debug('Busca finalizada! Retornando resultados!')
+            this.logger.debug(`Busca finalizada! Retornando ${movieList?.length} resultados!`)
             return movieList;
         } catch (error) {
             console.log(error);
@@ -93,14 +148,15 @@ export class SearchService {
     }
 
 
-    async searchOnOmDb(title: TempSearchDto) {
+    async searchOnOmDb(title: TempSearchDto){
+        let translatedInfo;
         let details = await this.axios.getDetailedMoviesOnOMDB(title.imdbID);
-        const translatedInfo = await this.axios.getTranslatedPlotOnTmdb(title.imdbID);
-        if (details.Response !== false) {
+        translatedInfo = await this.axios.getTranslatedPlotOnTmdb(title);
+        if(details.Response !== false){
             const movie = {
                 title: title.title,
-                translatedTitle: translatedInfo.title,
-                poster: details.Poster ? details.Poster : "N/A",
+                translatedTitle: translatedInfo.title? translatedInfo.title: translatedInfo.name,
+                poster: details.Poster? details.Poster : "N/A",
                 imdbID: title.imdbID,
                 year: details.Year ? details.Year : "N/A",
                 genre: details.Genre ? details.Genre : "N/A",
@@ -108,6 +164,7 @@ export class SearchService {
                 actor: details.Actors ? details.Actors : "N/A",
                 imdbRating: details.imdbRating ? details.imdbRating : "N/A",
                 plot: translatedInfo.overview ? translatedInfo.overview : details.Plot,
+                videos:title.videos
             } as SearchDto
             await this.tempsearchModel.deleteMany({ imdbID: movie.imdbID });  // Não entendi o pq do deleteMany.
             await this.searchModel.create(movie); // Criar regra para verificar se o filme não já existe no db.        
@@ -135,8 +192,7 @@ export class SearchService {
             if (!movies) {
                 throw new BadRequestException(MovieMessagesHelper.MOVIE_NOT_FOUND);
             }
-
-            this.logger.debug('Filtros Aplicados! Retornando resultados!')
+            this.logger.debug(`Filtros Aplicados! Retornando ${movies?.length} resultados!`)
             return movies;
         }
         catch (error) {
@@ -189,6 +245,7 @@ export class SearchService {
                 imdbRating: randomMovie.imdbRating,
                 runtime: randomMovie.Runtime, // NEW ATTRIBUTE
                 plot: randomMovie.Plot,
+                videos: "N/A"
             } as SearchDto
             return result
         }

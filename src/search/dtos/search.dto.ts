@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { IsString, IsNumber, IsArray } from "class-validator";
+=======
+import { ArrayMinSize, IsArray, IsString } from 'class-validator';
+>>>>>>> 87b7b74a71ded3c53beb64c445c5947402ba814c
 
 export class SearchDto {
     @IsString()
@@ -30,4 +34,9 @@ export class SearchDto {
 
     @IsString()
     plot: string;
+
+    @IsArray()
+    @IsString({ each: true })
+    @ArrayMinSize(1)
+    videos: string;
 }

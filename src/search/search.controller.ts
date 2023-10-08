@@ -12,9 +12,9 @@ export class SearchController {
     @IsPublic()
     async getMovies(@Query() movieName) {
         const movies = await this.searchService.searchMovie(movieName);
-        if (movies.length < 1) {
-            throw new BadRequestException(process.env.NO_RESULTS_FOUND);
-        } else {
+        if (movies?.length < 1){
+            throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND);
+        }else{
             return movies;
         }
     }
@@ -22,11 +22,11 @@ export class SearchController {
     @Get('filter/')
     @HttpCode(HttpStatus.OK)
     @IsPublic()
-    async getFilteredMovies(@Query() filters?: any) {
+    async getFilteredMovies(@Query() filters?:any) {
         const movies = await this.searchService.findMoviesByFilter(filters);
-        if (movies.length < 1) {
-            throw new BadRequestException(process.env.NO_RESULTS_FOUND);
-        } else {
+        if (movies?.length < 1){
+            throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND);
+        }else{
             return movies;
         }
     }
