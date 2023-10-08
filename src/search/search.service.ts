@@ -40,20 +40,21 @@ export class SearchService {
         return movieList;
     }
     
-    newObjectModel (objeto1, imdbId, id){
+    newObjectModel (result, imdbId, id){
         const restult = {
-            name:objeto1.name,
-            title:objeto1.name,
+            name:result.name,
+            title:result.name,
             type:'tv',
-            status:objeto1.status,
+            status:result.status,
             imdb_id:imdbId,
             id:id,
-            videos:"N]A"
+            videos:"N/A"
         };
 
         return restult;
 
     }
+
     async searchOnTmDb(title: TempSearchDto){
         let idsOnTMDB = [];
         let tmdbDetails = [];
@@ -61,6 +62,7 @@ export class SearchService {
         for (const title of titleList) {
             const mediaType= {
                 id: title.id.toString(),
+                
                 type:title.media_type,
                 name:title.name ? title.name : title.title
             }
@@ -119,7 +121,7 @@ export class SearchService {
 
     async searchMovie(title:TempSearchDto){
         try{
-            this.logger.debug(`Procurando filmes relacionados a ${title.title} .`)
+            this.logger.debug(`Procurando títulos relacionados a ${title.title} .`)
             let movieList = [];
             const traducoes = await this.searchOnTmDb(title);
             this.logger.debug(`${traducoes.length} filmes encontrados no tmdb! hora de procurar no meu db!`)
@@ -143,7 +145,6 @@ export class SearchService {
             console.log(error);
         }
     }
-
 
     async searchOnOmDb(title: TempSearchDto){
         let translatedInfo;

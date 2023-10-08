@@ -72,4 +72,15 @@ export class SearchController {
         return 
     }
 
+    @Get("movie/")
+    @HttpCode(HttpStatus.OK)
+    @IsPublic()
+    async getDetails(@Query() imdbID){
+        const movieObject = await this.searchService.searchOnMyDb(imdbID.imdbID);
+        if (!movieObject){
+            throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND);
+        }else{
+            return movieObject[0];
+        }
+    }
 }
