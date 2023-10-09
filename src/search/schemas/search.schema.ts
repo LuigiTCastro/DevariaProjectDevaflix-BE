@@ -17,6 +17,9 @@ export class Search {
     @Prop({ required: true })
     imdbID: string;
 
+    @Prop({required: true})
+    duracao:string;
+
     @Prop({ required: true })
     year: string;
 
@@ -36,6 +39,6 @@ export class Search {
     plot: string;
 
     @Prop({ required: true })
-    videos: string;
+    videos: string[];
 }
 export const SearchSchema = SchemaFactory.createForClass(Search);

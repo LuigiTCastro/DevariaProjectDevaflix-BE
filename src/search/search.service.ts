@@ -9,6 +9,9 @@ import { TempSearchDto } from './dtos/tempsearch.dto';
 import { MovieMessagesHelper } from './helpers/messages.helper';
 import { Logger } from '@nestjs/common';
 import { randomInt } from 'crypto';
+import { Rating, RatingDocument } from './schemas/rating.schema';
+import { RatingDto } from './dtos/rating.dto';
+
 
 
 @Injectable()
@@ -17,6 +20,7 @@ export class SearchService {
         
         @InjectModel(Search.name) private searchModel: Model<SearchDocument>,
         @InjectModel(TempSearch.name) private tempsearchModel: Model<TempSearchDocument>,
+        @InjectModel(Rating.name) private ratingModel: Model<RatingDocument>,
         private readonly axios:AxiosService
         ) {}
 
@@ -62,7 +66,7 @@ export class SearchService {
         for (const title of titleList) {
             const mediaType= {
                 id: title.id.toString(),
-                
+                duração:title.episode_run_time,
                 type:title.media_type,
                 name:title.name ? title.name : title.title
             }
@@ -109,7 +113,7 @@ export class SearchService {
                         type: id.type,
                         imdbID: result.imdb_id? result.imdb_id : id.imdbID,
                         tmdbId:id.id,
-                        videos: trailers.toString() ? trailers.toString() : "N/A"
+                        videos: trailers ? trailers : "N/A"
                     }
                     tmdbDetails.push(movieObj)
                     await this.tempsearchModel.create(movieObj); // Criar regra para demonstrar que esses objetos não contem informações minimas para retornar um objeto valido.
@@ -156,6 +160,7 @@ export class SearchService {
                 translatedTitle: translatedInfo.title? translatedInfo.title: translatedInfo.name,
                 poster: details.Poster? details.Poster : "N/A",
                 imdbID: title.imdbID,
+                duracao: details.Runtime ? details.Runtime : translatedInfo.episode_run_time ,
                 year: details.Year? details.Year : "N/A",
                 genre: details.Genre? details.Genre : "N/A",
                 director: details.Director? details.Director : "N/A",
@@ -236,7 +241,7 @@ export class SearchService {
                 imdbRating: randomMovie.imdbRating,
                 plot: randomMovie.Plot,
                 videos: "N/A"
-            } as SearchDto
+            } 
             return result
         }
 
@@ -272,14 +277,116 @@ export class SearchService {
         }
     }
 
-    async likeTitle(id:string){
+    async registerLikeMovie(loggedUserId: string, movieId: string) {
+        try {
+            this.logger.debug('Procurando filme.')
+            const movie = await this.searchModel.findById({ _id: movieId });
+            let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
-        console.log ("curtiu ")
+            if (!obj) {
+                obj = new this.ratingModel({
+                    imdbID: movie.imdbID,
+                    title: movie.title,
+                    likes: [],
+                    totalLikes: 0,
+                    dislikes: [],
+                    totalDislikes: 0,
+                    percentagelLikes: 0,
+                });
+                await obj.save();
+            }
+
+            if(obj.dislikes.indexOf(loggedUserId) != -1) {
+                obj.dislikes.splice(obj.dislikes.indexOf(loggedUserId), 1)
+            }
+
+            if (obj.likes.indexOf(loggedUserId) == -1) {
+                obj.likes.push(loggedUserId)
+                this.logger.debug('Like registrado com sucesso.')
+            }
+            else {
+                obj.likes.splice(obj.likes.indexOf(loggedUserId), 1)
+                this.logger.debug('Like removido com sucesso.')
+            }
+
+            obj.totalLikes = obj.likes.length
+            obj.totalDislikes = obj.dislikes.length
+
+            await this.ratingModel.findByIdAndUpdate(obj._id, {
+                likes: obj.likes, totalLikes: obj.totalLikes,
+                dislikes: obj.dislikes, totalDislikes: obj.totalDislikes
+            })
+            obj.percentageLikes = await this.registerPercentageLikes(movieId)
+            return obj
+        }
+
+        catch (error) {
+            console.log(error)
+            this.logger.error(error)
+        }
     }
 
-    async dislikeTitle(id:string){
+    async registerDislikeMovie(loggedUserId: string, movieId: string) {
+        try {
+            this.logger.debug('Procurando filme.')
+            const movie = await this.searchModel.findById({ _id: movieId });
+            let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
-        console.log ("curtiu ")
+            if (!obj) {
+                obj = new this.ratingModel({
+                    imdbID: movie.imdbID,
+                    title: movie.title,
+                    likes: [],
+                    totalLikes: 0,
+                    dislikes: [],
+                    totalDislikes: 0,
+                    percentageLikes: 0,
+                });
+                await obj.save();
+            }
+
+            if(obj.likes.indexOf(loggedUserId) != -1) {
+                obj.likes.splice(obj.likes.indexOf(loggedUserId), 1)
+            }
+
+            if (obj.dislikes.indexOf(loggedUserId) == -1) {
+                obj.dislikes.push(loggedUserId)
+                this.logger.debug('Dislike registrado com sucesso.')
+            }
+            else {
+                obj.dislikes.splice(obj.dislikes.indexOf(loggedUserId), 1)
+                this.logger.debug('Dislike removido com sucesso.')
+            }
+
+            obj.totalDislikes = obj.dislikes.length
+            obj.totalLikes = obj.likes.length
+
+            await this.ratingModel.findByIdAndUpdate(obj._id, {
+                dislikes: obj.dislikes, totalDislikes: obj.totalDislikes,
+                likes: obj.likes, totalLikes: obj.totalLikes
+            })
+            obj.percentageLikes = await this.registerPercentageLikes(movieId)
+            return obj
+        }
+
+        catch (error) {
+            console.log(error)
+            this.logger.error(error)
+        }
+    }
+
+    async registerPercentageLikes(movieId: string) {
+        const movie = await this.searchModel.findById({ _id: movieId });
+        let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
+        obj.percentageLikes = (obj.totalLikes / (obj.totalLikes + obj.totalDislikes))
+
+        if(obj.totalLikes == 0)
+            obj.percentageLikes = 0
+
+        await this.ratingModel.findByIdAndUpdate(obj._id, {
+            percentageLikes: obj.percentageLikes
+        })
+        return obj.percentageLikes
     }
     
 }

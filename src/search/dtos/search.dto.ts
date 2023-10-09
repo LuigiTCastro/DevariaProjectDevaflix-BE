@@ -14,6 +14,9 @@ export class SearchDto {
     imdbID: string;
 
     @IsString()
+    duracao:string;
+
+    @IsString()
     year: string;
 
     @IsString()
@@ -34,5 +37,5 @@ export class SearchDto {
     @IsArray()
     @IsString({ each: true })
     @ArrayMinSize(1)
-    videos: string;
+    videos: string[];
 }

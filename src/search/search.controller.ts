@@ -1,4 +1,4 @@
-import {Controller, Put, Get, BadRequestException, HttpCode, HttpStatus, Query} from '@nestjs/common';
+import { Controller, Get, BadRequestException, HttpCode, HttpStatus, Query, Put, Param, Request } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { IsPublic } from 'src/auth/decorators/ispublic.decorator';
 import { MovieMessagesHelper } from './helpers/messages.helper';
@@ -58,18 +58,30 @@ export class SearchController {
         return randomMovie
     }
 
-    @Put('likes/')
-    async putTitleLikes(@Query() id?:string) {
-        await this.searchService.likeTitle(id);
-      
-        return 
+    @Put('like/:id')
+    @HttpCode(HttpStatus.OK)
+    async putLikeMovie(@Request() req, @Param('id') movieId: string) {
+        const { userId } = req?.user
+        const result = await this.searchService.registerLikeMovie(userId, movieId)
+
+        if(!result) {
+            throw new BadRequestException(MovieMessagesHelper.LIKE_MOVIE_INVALID)
+        }
+
+        return result
     }
 
-    @Put('dislikes/')
-    async putTitleDislikes(@Query() id?:string) {
-        await this.searchService.dislikeTitle(id);
-      
-        return 
+    @Put('dislike/:id')
+    @HttpCode(HttpStatus.OK)
+    async putDislikeMovie(@Request() req, @Param('id') movieId: string) {
+        const { userId } = req?.user
+        const result = await this.searchService.registerDislikeMovie(userId, movieId)
+
+        if(!result) {
+            throw new BadRequestException(MovieMessagesHelper.DISLIKE_MOVIE_INVALID)
+        }
+
+        return result
     }
 
     @Get("movie/")

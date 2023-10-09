@@ -16,5 +16,5 @@ export class TempSearchDto {
     @IsArray()
     @IsString({ each: true })
     @ArrayMinSize(1)
-    videos: string;
+    videos: string[];
 }
