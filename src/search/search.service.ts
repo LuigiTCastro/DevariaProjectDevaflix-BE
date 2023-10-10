@@ -160,7 +160,7 @@ export class SearchService {
                 translatedTitle: translatedInfo.title? translatedInfo.title: translatedInfo.name,
                 poster: details.Poster? details.Poster : "N/A",
                 imdbID: title.imdbID,
-                duracao: details.Runtime ? details.Runtime : translatedInfo.episode_run_time ,
+                duracao: details.Runtime ? translatedInfo.episode_run_time : details.Runtime ,
                 year: details.Year? details.Year : "N/A",
                 genre: details.Genre? details.Genre : "N/A",
                 director: details.Director? details.Director : "N/A",
