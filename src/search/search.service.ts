@@ -10,7 +10,6 @@ import { MovieMessagesHelper } from './helpers/messages.helper';
 import { Logger } from '@nestjs/common';
 import { randomInt } from 'crypto';
 import { Rating, RatingDocument } from './schemas/rating.schema';
-import { RatingDto } from './dtos/rating.dto';
 
 
 @Injectable()
@@ -42,61 +41,61 @@ export class SearchService {
         }
         return movieList;
     }
-    
-    newObjectModel (objeto1, imdbId, id){
+
+    newObjectModel(objeto1, imdbId, id) {
         const restult = {
-            name:objeto1.name,
-            title:objeto1.name,
-            type:'tv',
-            status:objeto1.status,
-            imdb_id:imdbId,
-            id:id,
-            videos:"N]A"
+            name: objeto1.name,
+            title: objeto1.name,
+            type: 'tv',
+            status: objeto1.status,
+            imdb_id: imdbId,
+            id: id,
+            videos: "N]A"
         };
 
         return restult;
 
     }
-    async searchOnTmDb(title: TempSearchDto){
+    async searchOnTmDb(title: TempSearchDto) {
         let idsOnTMDB = [];
         let tmdbDetails = [];
         const titleList = await this.axios.getNamesListOnTMDB(title);
         for (const title of titleList) {
-            const mediaType= {
+            const mediaType = {
                 id: title.id.toString(),
-                type:title.media_type,
-                name:title.name ? title.name : title.title
+                type: title.media_type,
+                name: title.name ? title.name : title.title
             }
             idsOnTMDB.push(mediaType);
         }
         for (const id of idsOnTMDB) {
-            if( id.type !== 'person'){
+            if (id.type !== 'person') {
                 let result;
                 let trailers = [];
-                if (id.type == "movie"){
+                if (id.type == "movie") {
                     result = await this.axios.getMovieByIdsOnTMDB(id.id);
                     const searchTrailers = await this.axios.getMovieTrailer(id.id);
                     for (const trailer of searchTrailers) {
-                        if (trailer.site === "YouTube"){
+                        if (trailer.site === "YouTube") {
                             trailers.push(`https://www.youtube.com/watch?v=${trailer.key} `);
-                        }else{
+                        } else {
                             trailers.push(`Site:${trailer.site}, Key:${trailer.key} `);
                         }
                     }
                 }
-                if (id.type == "tv"){
+                if (id.type == "tv") {
                     result = await this.axios.getSeriesByIdsOnTMDB(id.id);
                     const searchTrailers = await this.axios.getSeriesTrailer(id.id);
                     for (const trailer of searchTrailers) {
-                        if (trailer.site === "YouTube"){
+                        if (trailer.site === "YouTube") {
                             trailers.push(`https://www.youtube.com/watch?v=${trailer.key} `);
-                        }else{
+                        } else {
                             trailers.push(`Site:${trailer.site}, Key:${trailer.key} `);
                         }
                     }
                 }
 
-                if (!result.imdb_id){
+                if (!result.imdb_id) {
                     const ttId = await this.axios.getTtIdSeriesfromOmdb(id.name);
                     if (ttId.Response !== 'False') {
                         const imdb_id = ttId.Search[0].imdbID;
@@ -106,10 +105,10 @@ export class SearchService {
                 }
                 if (result?.status !== "Planned" && result.imdb_id !== null && result.imdb_id?.length > 0) {
                     const movieObj = {
-                        title: result.title? result.title: id.name,
+                        title: result.title ? result.title : id.name,
                         type: id.type,
-                        imdbID: result.imdb_id? result.imdb_id : id.imdbID,
-                        tmdbId:id.id,
+                        imdbID: result.imdb_id ? result.imdb_id : id.imdbID,
+                        tmdbId: id.id,
                         videos: trailers.toString() ? trailers.toString() : "N/A"
                     }
                     tmdbDetails.push(movieObj)
@@ -120,8 +119,8 @@ export class SearchService {
         return tmdbDetails;
     }
 
-    async searchMovie(title:TempSearchDto){
-        try{
+    async searchMovie(title: TempSearchDto) {
+        try {
             this.logger.debug(`Procurando filmes relacionados a ${title.title} .`)
             let movieList = [];
             const traducoes = await this.searchOnTmDb(title);
@@ -148,15 +147,15 @@ export class SearchService {
     }
 
 
-    async searchOnOmDb(title: TempSearchDto){
+    async searchOnOmDb(title: TempSearchDto) {
         let translatedInfo;
         let details = await this.axios.getDetailedMoviesOnOMDB(title.imdbID);
         translatedInfo = await this.axios.getTranslatedPlotOnTmdb(title);
-        if(details.Response !== false){
+        if (details.Response !== false) {
             const movie = {
                 title: title.title,
-                translatedTitle: translatedInfo.title? translatedInfo.title: translatedInfo.name,
-                poster: details.Poster? details.Poster : "N/A",
+                translatedTitle: translatedInfo.title ? translatedInfo.title : translatedInfo.name,
+                poster: details.Poster ? details.Poster : "N/A",
                 imdbID: title.imdbID,
                 year: details.Year ? details.Year : "N/A",
                 genre: details.Genre ? details.Genre : "N/A",
@@ -164,10 +163,10 @@ export class SearchService {
                 actor: details.Actors ? details.Actors : "N/A",
                 imdbRating: details.imdbRating ? details.imdbRating : "N/A",
                 plot: translatedInfo.overview ? translatedInfo.overview : details.Plot,
-                videos:title.videos
+                videos: title.videos
             } as SearchDto
-            await this.tempsearchModel.deleteMany({ imdbID: movie.imdbID });  // Não entendi o pq do deleteMany.
-            await this.searchModel.create(movie); // Criar regra para verificar se o filme não já existe no db.        
+            await this.tempsearchModel.deleteMany({ imdbID: movie.imdbID });
+            await this.searchModel.create(movie);
         }
         return;
     }
@@ -200,36 +199,47 @@ export class SearchService {
         }
     }
 
-    // SEPARAR A BUSCA DE FILMES DA BUSCA DE SERIES?
-    // BUSCAR POR FILMES DE MAIS QUALIDADE (PULAR FILMES COM NOTAS: N/A?)
     // BUSCAR NO BANCO, SE NÃO ENCONTRAR, BUSCAR NA OMDB E SALVAR NO BANCO?
     async findRandomMovieFromOMDB() {
         try {
             this.logger.debug('Searching random movie.')
 
             const imdbIdList = []
+            const range1 = []
+            const range2 = []
+            const range3 = []
+            const allRange = [range1, range2, range3]
 
             for (let i = 1; i <= 9999999; i++) {
                 const paddedNumber = i.toString().padStart(7, '0'); // Formata o número para ter sempre 7 dígitos com zeros à esquerda
                 const imdbId = `tt${paddedNumber}`;
                 imdbIdList.push(imdbId);
             }
+            for (let i = 7; i <= 10; i += 0.1) {
+                range1.push(Number(i.toFixed(1)))
+            }
+            for (let i = 5; i <= 10; i += 0.1) {
+                range2.push(Number(i.toFixed(1)))
+            }
+            for (let i = 0; i <= 10; i += 0.1) {
+                range3.push(Number(i.toFixed(1)))
+            }
 
             let randomIndex = randomInt(0, imdbIdList.length)
             let randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomIndex])
-
-            if (!randomMovie) {
-                throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
-            }
-
-            if (randomMovie.title === "N/A" || randomMovie.Title === "#DUPE#") {
-                while (randomMovie.title === "N/A" || randomMovie.Title === "#DUPE#") {
-                    randomIndex = randomInt(0, imdbIdList.length)
-                    randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomIndex])
+            let randomRange = randomInt(0, (allRange.length))
+            let randomIndex2 = randomInt(0, (allRange[randomRange].length))
+            let randomScore = allRange[randomRange][randomIndex2]
+            
+            // if (!randomMovie || randomMovie.title === "N/A" || randomMovie.title === "#DUPE#" || randomMovie.imdbRating !== randomScore) {
+                while (!randomMovie || randomMovie.title === "N/A" || randomMovie.title === "#DUPE#" || randomMovie.imdbRating === "N/A") {
+                        randomIndex = randomInt(0, imdbIdList.length)
+                        randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomIndex])
                 }
-            }
+            // }
 
-            console.log(imdbIdList[randomIndex])
+            // const result = await this.searchMovie(randomMovie.Title)
+
             this.logger.debug('Random movie found.')
             const result = {
                 id: randomMovie._id,
@@ -245,7 +255,7 @@ export class SearchService {
                 imdbRating: randomMovie.imdbRating,
                 runtime: randomMovie.Runtime, // NEW ATTRIBUTE
                 plot: randomMovie.Plot,
-                videos: "N/A"
+                videos: 'N/A'
             } as SearchDto
             return result
         }
@@ -301,11 +311,9 @@ export class SearchService {
                 });
                 await obj.save();
             }
-
-            if(obj.dislikes.indexOf(loggedUserId) != -1) {
+            if (obj.dislikes.indexOf(loggedUserId) != -1) {
                 obj.dislikes.splice(obj.dislikes.indexOf(loggedUserId), 1)
             }
-
             if (obj.likes.indexOf(loggedUserId) == -1) {
                 obj.likes.push(loggedUserId)
                 this.logger.debug('Like registrado com sucesso.')
@@ -351,7 +359,7 @@ export class SearchService {
                 await obj.save();
             }
 
-            if(obj.likes.indexOf(loggedUserId) != -1) {
+            if (obj.likes.indexOf(loggedUserId) != -1) {
                 obj.likes.splice(obj.likes.indexOf(loggedUserId), 1)
             }
 
@@ -386,7 +394,7 @@ export class SearchService {
         let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
         obj.percentageLikes = (obj.totalLikes / (obj.totalLikes + obj.totalDislikes))
 
-        if(obj.totalLikes == 0)
+        if (obj.totalLikes == 0)
             obj.percentageLikes = 0
 
         await this.ratingModel.findByIdAndUpdate(obj._id, {
