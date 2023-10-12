@@ -205,42 +205,37 @@ export class SearchService {
             this.logger.debug('Searching random movie.')
 
             const imdbIdList = []
-            const range1 = []
-            const range2 = []
-            const range3 = []
-            const allRange = [range1, range2, range3]
-
             for (let i = 1; i <= 9999999; i++) {
                 const paddedNumber = i.toString().padStart(7, '0'); // Formata o número para ter sempre 7 dígitos com zeros à esquerda
                 const imdbId = `tt${paddedNumber}`;
                 imdbIdList.push(imdbId);
             }
-            for (let i = 7; i <= 10; i += 0.1) {
-                range1.push(Number(i.toFixed(1)))
-            }
-            for (let i = 5; i <= 10; i += 0.1) {
-                range2.push(Number(i.toFixed(1)))
-            }
-            for (let i = 0; i <= 10; i += 0.1) {
-                range3.push(Number(i.toFixed(1)))
-            }
+            let randomImdbId
+            let randomMovie
+            let movie
 
-            let randomIndex = randomInt(0, imdbIdList.length)
-            let randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomIndex])
-            let randomRange = randomInt(0, (allRange.length))
-            let randomIndex2 = randomInt(0, (allRange[randomRange].length))
-            let randomScore = allRange[randomRange][randomIndex2]
-            
-            // if (!randomMovie || randomMovie.title === "N/A" || randomMovie.title === "#DUPE#" || randomMovie.imdbRating !== randomScore) {
+            while(movie === undefined) {
+                console.log(movie)
+                randomImdbId = randomInt(0, imdbIdList.length);
+                randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomImdbId]);
+                
                 while (!randomMovie || randomMovie.title === "N/A" || randomMovie.title === "#DUPE#" || randomMovie.imdbRating === "N/A") {
-                        randomIndex = randomInt(0, imdbIdList.length)
-                        randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomIndex])
+                    randomImdbId = randomInt(0, imdbIdList.length)
+                    randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomImdbId])
                 }
-            // }
-
-            // const result = await this.searchMovie(randomMovie.Title)
-
+                let movieObj: TempSearchDto = {
+                    title: randomMovie.Title,
+                    type: randomMovie.Type,
+                    imdbID: randomMovie.imdbID,
+                    tmdbId: 'N/A',
+                    videos: 'N/A',
+                }
+                const moviesList = await this.searchMovie(movieObj)
+                movie = moviesList.find((movie) => movie.imdbID === randomMovie.imdbID)
+                console.log(movie)
+            }
             this.logger.debug('Random movie found.')
+
             const result = {
                 id: randomMovie._id,
                 type: randomMovie.Type,
@@ -253,13 +248,13 @@ export class SearchService {
                 director: randomMovie.Director,
                 actor: randomMovie.Actors,
                 imdbRating: randomMovie.imdbRating,
-                runtime: randomMovie.Runtime, // NEW ATTRIBUTE
+                runtime: randomMovie.Runtime,
+                language: randomMovie.Language,
                 plot: randomMovie.Plot,
-                videos: 'N/A'
+                videos: movie.videos,
             } as SearchDto
             return result
         }
-
         catch (error) {
             this.logger.error(error)
         }
@@ -272,22 +267,17 @@ export class SearchService {
 
             const moviesOnDb = await this.searchModel.find()
             const moviesList = []
-
             for (const movie of moviesOnDb) {
                 moviesList.push(movie)
             }
-
             const randomIndex = randomInt(0, moviesList.length)
             const randomMovie = moviesList[randomIndex]
-
             if (!randomMovie) {
                 throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
             }
-
             this.logger.debug('Random movie found.')
             return randomMovie
         }
-
         catch (error) {
             this.logger.error(error)
         }
