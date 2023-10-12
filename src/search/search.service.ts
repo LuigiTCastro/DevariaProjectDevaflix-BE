@@ -186,8 +186,8 @@ export class SearchService {
                     query[attr] = { $regex: filters[attr], $options: 'i' };
                 }
             }
-
             const movies = await this.searchModel.find(query);
+            
             if (!movies) {
                 throw new BadRequestException(MovieMessagesHelper.MOVIE_NOT_FOUND);
             }
@@ -199,7 +199,6 @@ export class SearchService {
         }
     }
 
-    // BUSCAR NO BANCO, SE NÃO ENCONTRAR, BUSCAR NA OMDB E SALVAR NO BANCO?
     async findRandomMovieFromOMDB() {
         try {
             this.logger.debug('Searching random movie.')
