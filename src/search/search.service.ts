@@ -160,7 +160,7 @@ export class SearchService {
                 translatedTitle: translatedInfo.title? translatedInfo.title: translatedInfo.name,
                 poster: details.Poster? details.Poster : "N/A",
                 imdbID: title.imdbID,
-                duracao: details.Runtime ? translatedInfo.episode_run_time : details.Runtime ,
+                duracao: details.Runtime ? details.Runtime : translatedInfo.episode_run_time ,
                 year: details.Year? details.Year : "N/A",
                 genre: details.Genre? details.Genre : "N/A",
                 director: details.Director? details.Director : "N/A",
@@ -196,10 +196,6 @@ export class SearchService {
         }
     }
 
-    // EXCLUIR DA BUSCA FILMES ADULTOS
-    // SEPARAR A BUSCA DE FILMES DA BUSCA DE SERIES?
-    // BUSCAR POR FILMES DE MAIS QUALIDADE
-    // BUSCAR NO BANCO, SE NÃO ENCONTRAR, BUSCAR NA OMDB E SALVAR NO BANCO
     async findRandomMovieFromOMDB() {
         try {
             this.logger.debug('Searching random movie.')
