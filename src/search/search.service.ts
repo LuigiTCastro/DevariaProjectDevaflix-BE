@@ -160,13 +160,13 @@ export class SearchService {
                 translatedTitle: translatedInfo.title? translatedInfo.title: translatedInfo.name,
                 poster: details.Poster? details.Poster : "N/A",
                 imdbID: title.imdbID,
-                duracao: details.Runtime ? details.Runtime : translatedInfo.episode_run_time ,
+                duracao: details.Runtime ? details.Runtime : translatedInfo.episode_run_time  || "N/A",
                 year: details.Year? details.Year : "N/A",
                 genre: details.Genre? details.Genre : "N/A",
                 director: details.Director? details.Director : "N/A",
                 actor: details.Actors? details.Actors : "N/A",
                 imdbRating: details.imdbRating? details.imdbRating : "N/A",
-                plot: translatedInfo.overview ? translatedInfo.overview : details.Plot,
+                plot: translatedInfo.overview ? translatedInfo.overview : details.Plot  || "N/A",
                 videos:title.videos
             } as SearchDto
             await this.tempsearchModel.deleteMany({imdbID:movie.imdbID});
@@ -273,10 +273,10 @@ export class SearchService {
         }
     }
 
-    async registerLikeMovie(loggedUserId: string, movieId: string) {
+    async registerLikeMovie(loggedUserId: string, movie_Id: string) {
         try {
             this.logger.debug('Procurando filme.')
-            const movie = await this.searchModel.findById({ _id: movieId });
+            const movie = await this.searchModel.findById({ _id: movie_Id });
             let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
             if (!obj) {
@@ -312,7 +312,7 @@ export class SearchService {
                 likes: obj.likes, totalLikes: obj.totalLikes,
                 dislikes: obj.dislikes, totalDislikes: obj.totalDislikes
             })
-            obj.percentageLikes = await this.registerPercentageLikes(movieId)
+            obj.percentageLikes = await this.registerPercentageLikes(movie_Id)
             return obj
         }
 
@@ -322,10 +322,10 @@ export class SearchService {
         }
     }
 
-    async registerDislikeMovie(loggedUserId: string, movieId: string) {
+    async registerDislikeMovie(loggedUserId: string, movie_Id: string) {
         try {
             this.logger.debug('Procurando filme.')
-            const movie = await this.searchModel.findById({ _id: movieId });
+            const movie = await this.searchModel.findById({ _id: movie_Id });
             let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
             if (!obj) {
@@ -361,7 +361,7 @@ export class SearchService {
                 dislikes: obj.dislikes, totalDislikes: obj.totalDislikes,
                 likes: obj.likes, totalLikes: obj.totalLikes
             })
-            obj.percentageLikes = await this.registerPercentageLikes(movieId)
+            obj.percentageLikes = await this.registerPercentageLikes(movie_Id)
             return obj
         }
 
@@ -371,8 +371,8 @@ export class SearchService {
         }
     }
 
-    async registerPercentageLikes(movieId: string) {
-        const movie = await this.searchModel.findById({ _id: movieId });
+    async registerPercentageLikes(movie_Id: string) {
+        const movie = await this.searchModel.findById({ _id: movie_Id });
         let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
         obj.percentageLikes = (obj.totalLikes / (obj.totalLikes + obj.totalDislikes))
 

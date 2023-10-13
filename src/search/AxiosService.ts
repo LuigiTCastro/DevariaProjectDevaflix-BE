@@ -49,6 +49,7 @@ export class AxiosService {
     }
 
     async getDetailedMoviesOnOMDB(imdbId: string) {
+        console.log(process.env.OMDB_PUBLIC_URL + `&i=${imdbId}`);
         const data = await axios.get(process.env.OMDB_PUBLIC_URL + `&i=${imdbId}`);
         if (data.data.Response !== 'False') {
             return data.data;
