@@ -382,7 +382,7 @@ export class SearchService {
     async registerPercentageLikes(movieId: string) {
         const movie = await this.searchModel.findById({ _id: movieId });
         let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
-        obj.percentageLikes = (obj.totalLikes / (obj.totalLikes + obj.totalDislikes))
+        obj.percentageLikes = Number((obj.totalLikes / (obj.totalLikes + obj.totalDislikes)).toFixed(2))
 
         if (obj.totalLikes == 0)
             obj.percentageLikes = 0
