@@ -64,7 +64,7 @@ export class SearchController {
         const result = await this.searchService.registerLikeMovie(userId, movieId)
 
         if(!result) {
-            throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
+            throw new BadRequestException(MovieMessagesHelper.LIKE_MOVIE_INVALID)
         }
 
         return result
@@ -77,7 +77,7 @@ export class SearchController {
         const result = await this.searchService.registerDislikeMovie(userId, movieId)
 
         if(!result) {
-            throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND)
+            throw new BadRequestException(MovieMessagesHelper.DISLIKE_MOVIE_INVALID)
         }
 
         return result
