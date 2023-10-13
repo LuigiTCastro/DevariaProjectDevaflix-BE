@@ -155,17 +155,20 @@ export class SearchService {
         let details = await this.axios.getDetailedMoviesOnOMDB(title.imdbID);
         translatedInfo = await this.axios.getTranslatedPlotOnTmdb(title);
         if(details.Response !== false){
+            if(details.imdbRating === "N/A"){
+                details.imdbRating = 0;
+            }
             const movie = {
                 title: title.title,
                 translatedTitle: translatedInfo.title? translatedInfo.title: translatedInfo.name,
                 poster: details.Poster? details.Poster : "N/A",
                 imdbID: title.imdbID,
                 duracao: details.Runtime ? details.Runtime : translatedInfo.episode_run_time  || "N/A",
-                year: details.Year? details.Year : "N/A",
-                genre: details.Genre? details.Genre : "N/A",
-                director: details.Director? details.Director : "N/A",
-                actor: details.Actors? details.Actors : "N/A",
-                imdbRating: details.imdbRating? details.imdbRating : "N/A",
+                year: details.Year ? details.Year : "N/A",
+                genre: details.Genre ? details.Genre : "N/A",
+                director: details.Director ? details.Director : "N/A",
+                actor: details.Actors ? details.Actors : "N/A",
+                imdbRating: details.imdbRating ? details.imdbRating : 0,
                 plot: translatedInfo.overview ? translatedInfo.overview : details.Plot  || "N/A",
                 videos:title.videos
             } as SearchDto
@@ -176,8 +179,9 @@ export class SearchService {
     }
 
     async findMoviesbyfilter(filters:any) {
+        console.log(filters)
         try{
-            this.logger.debug('Filtrando filmes')
+            this.logger.debug(`Filtrando filmes por ${filters.genre}`)
             const query = {};
             const filterAttributes = ['year','genre', 'director', 'actor', 'imdbRating', 'plot'];
             for(const attr of filterAttributes){
@@ -372,17 +376,19 @@ export class SearchService {
     }
 
     async registerPercentageLikes(movie_Id: string) {
-        const movie = await this.searchModel.findById({ _id: movie_Id });
-        let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
-        obj.percentageLikes = (obj.totalLikes / (obj.totalLikes + obj.totalDislikes))
+        const title = await this.searchModel.findById({ _id: movie_Id });
+        let titleLikes = await this.ratingModel.findOne({ imdbID: title.imdbID });
 
-        if(obj.totalLikes == 0)
-            obj.percentageLikes = 0
+        titleLikes.percentageLikes = (100 / (titleLikes.totalLikes + titleLikes.totalDislikes)) * titleLikes.totalLikes 
+        // titleLikes.percentageLikes = (titleLikes.totalLikes / (titleLikes.totalLikes + titleLikes.totalDislikes))
 
-        await this.ratingModel.findByIdAndUpdate(obj._id, {
-            percentageLikes: obj.percentageLikes
+        if(titleLikes.totalLikes == 0)
+            titleLikes.percentageLikes = 0
+
+        await this.ratingModel.findByIdAndUpdate(titleLikes._id, {
+            percentageLikes: titleLikes.percentageLikes
         })
-        return obj.percentageLikes
+        return titleLikes.percentageLikes
     }
     
 }

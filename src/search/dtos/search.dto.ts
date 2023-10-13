@@ -29,7 +29,7 @@ export class SearchDto {
     actor: string;
 
     @IsString()
-    imdbRating: string;
+    imdbRating: number;
 
     @IsString()
     plot: string;

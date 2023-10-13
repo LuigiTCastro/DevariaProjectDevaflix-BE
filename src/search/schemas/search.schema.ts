@@ -33,7 +33,7 @@ export class Search {
     actor: string;
 
     @Prop({ required: true })
-    imdbRating: string;
+    imdbRating: number;
 
     @Prop({ required: true })
     plot: string;
