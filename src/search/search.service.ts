@@ -199,6 +199,8 @@ export class SearchService {
         }
     }
 
+    // Retirei a lógica de buscar filmes com imdbRating baseado nas faixas de notas. (Retorno muito demorado).
+    // A lógica de utilizar o searchMovie para salvar o randomMovie no banco e tbm puxar o movie.videos às vezes tbm tem um retorno demorado.
     async findRandomMovieFromOMDB() {
         try {
             this.logger.debug('Searching random movie.')
@@ -259,7 +261,6 @@ export class SearchService {
         }
     }
 
-    // ADC O ATRIBUTO RUNTIME?
     async findRandomMovieFromMyDb() {
         try {
             this.logger.debug('Searching random movie.')
