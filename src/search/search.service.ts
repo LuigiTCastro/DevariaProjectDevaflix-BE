@@ -179,7 +179,6 @@ export class SearchService {
     }
 
     async findMoviesbyfilter(filters:any) {
-        console.log(filters)
         try{
             this.logger.debug(`Filtrando filmes por ${filters.genre}`)
             const query = {};
