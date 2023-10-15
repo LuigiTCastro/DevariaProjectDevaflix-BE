@@ -227,28 +227,24 @@ export class SearchService {
             let randomMovie
             let movie
 
-            while(movie === undefined) {
-                console.log(movie)
-                randomImdbId = randomInt(0, imdbIdList.length);
-                randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomImdbId]);
-                
-                while (!randomMovie || randomMovie.title === "N/A" || randomMovie.title === "#DUPE#" || randomMovie.imdbRating === "N/A") {
-                    randomImdbId = randomInt(0, imdbIdList.length)
-                    randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomImdbId])
-                }
-                let movieObj: TempSearchDto = {
-                    title: randomMovie.Title,
-                    type: randomMovie.Type,
-                    imdbID: randomMovie.imdbID,
-                    tmdbId: 'N/A',
-                    videos: 'N/A',
-                }
-                const moviesList = await this.searchMovie(movieObj)
-                movie = moviesList.find((movie) => movie.imdbID === randomMovie.imdbID)
-                console.log(movie)
+            while (!randomMovie || randomMovie.title === "N/A" || randomMovie.title === "#DUPE#" /*|| randomMovie.imdbRating === "N/A"*/) {
+                randomImdbId = randomInt(0, imdbIdList.length)
+                randomMovie = await this.axios.getDetailedMoviesOnOMDB(imdbIdList[randomImdbId])
             }
+            // let movieObj: TempSearchDto = {
+            //     title: randomMovie.Title,
+            //     type: randomMovie.Type,
+            //     imdbID: randomMovie.imdbID,
+            //     tmdbId: 'N/A',
+            //     videos: 'N/A',
+            // }
+            // const moviesList = await this.searchMovie(movieObj) // busca com o metodo searchMovie, salvando no banco (mais demorado).
+            // movie = moviesList.find((movie) => movie.imdbID === randomMovie.imdbID)
+            movie = await this.searchModel.findOne({imdbID: randomMovie.imdbID}) // procura se no banco existe o filme para pegar o trailer (modelo mais rapido).
+            if(movie) randomMovie.videos = movie.videos
+            else randomMovie.videos = 'N/A'
+                
             this.logger.debug('Random movie found.')
-
             const result = {
                 id: randomMovie._id,
                 type: randomMovie.Type,
@@ -264,7 +260,7 @@ export class SearchService {
                 runtime: randomMovie.Runtime,
                 language: randomMovie.Language,
                 plot: randomMovie.Plot,
-                videos: movie.videos,
+                videos: randomMovie.videos
             } as SearchDto
             return result
         }
