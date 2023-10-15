@@ -171,27 +171,39 @@ export class SearchService {
         return;
     }
 
-    // IMPROVE THE OPERATION
-    // MAKE TO SEARCH IN THE APIS TOO
-    // FIX THE IMDBRATING VALIDATION
     // MAKE TO SEARCH IN THE APIS TOO
     async findMoviesByFilter(filters: any) {
         try {
             this.logger.debug('Filtrando filmes')
-            const query = {};
-            const filterAttributes = ['year', 'genre', 'director', 'actor', 'imdbRating', 'plot']; // Inserir Type? Other attributes? (runtime)
-
+            let movies
+            const query = {}
+            const scores = []
+            const filterAttributes = [
+                'type', 'year', 'genre', 'director', 'actor', 'imdbRating', 'videos', 'plot'
+            ];
             for (const attr of filterAttributes) {
                 if (filters[attr]) {
                     query[attr] = { $regex: filters[attr], $options: 'i' };
+                    if (attr === 'imdbRating') {
+                        // se pesquisar numero inteiro, retorna do num int até o valor mais próximo do num int posterior (ex.: 7 -> de 7.0 a 7.9)
+                        if(Number.isInteger(Number(filters[attr]))) {
+                            for (let i = 0.0; i < 0.9; i += 0.1) {
+                                scores.push((Number(filters[attr]) + i).toFixed(1))
+                            }
+                            query[attr] = scores
+                        }
+                        // se pesquisar numero quebrado, retorna exato (ex.: 7.3 -> 7.3)
+                        else {
+                            query[attr] = filters[attr];
+                        }
+                    }
                 }
             }
-            const movies = await this.searchModel.find(query);
-            
+            movies = await this.searchModel.find(query);
             if (!movies) {
                 throw new BadRequestException(MovieMessagesHelper.MOVIE_NOT_FOUND);
             }
-            this.logger.debug(`Filtros Aplicados! Retornando ${movies?.length} resultados!`)
+            this.logger.debug(`Filtros aplicados! Retornando ${movies?.length} resultados!`)
             return movies;
         }
         catch (error) {
