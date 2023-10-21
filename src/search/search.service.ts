@@ -389,5 +389,9 @@ export class SearchService {
         })
         return titleLikes.percentageLikes
     }
+
+    async getMovieRating(movieId: string) {
+        return await this.ratingModel.findOne({ _id: movieId });
+    }
     
 }

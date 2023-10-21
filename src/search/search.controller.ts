@@ -84,6 +84,17 @@ export class SearchController {
         return result
     }
 
+    @Get('rating/:id')
+    @HttpCode(HttpStatus.OK)
+    @IsPublic()
+    async getRating(@Param('id') movieId: string) {
+        let result = await this.searchService.getMovieRating(movieId);
+        if (!result) {
+            throw new BadRequestException(MovieMessagesHelper.MOVIE_RATING_NOT_FOUND)
+        }
+        return result
+    }
+
     @Get("movie/")
     @HttpCode(HttpStatus.OK)
     @IsPublic()
