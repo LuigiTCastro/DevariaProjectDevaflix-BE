@@ -402,7 +402,6 @@ export class SearchService {
     }
 
     async getMovieRating(movieId: string) {
-        this.logger.debug(`Fetching likes data in the id ${movieId}.`)
         return await this.ratingModel.findOne({ _id: movieId });
     }
 }
