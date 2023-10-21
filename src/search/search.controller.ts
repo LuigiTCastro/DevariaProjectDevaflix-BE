@@ -12,9 +12,9 @@ export class SearchController {
     @IsPublic()
     async getMovies(@Query() movieName) {
         const movies = await this.searchService.searchMovie(movieName);
-        if (movies?.length < 1){
+        if (movies?.length < 1) {
             throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND);
-        }else{
+        } else {
             return movies;
         }
     }
@@ -22,11 +22,11 @@ export class SearchController {
     @Get('filter/')
     @HttpCode(HttpStatus.OK)
     @IsPublic()
-    async getFilteredMovies(@Query() filters?:any) {
+    async getFilteredMovies(@Query() filters?: any) {
         const movies = await this.searchService.findMoviesByFilter(filters);
-        if (movies?.length < 1){
+        if (movies?.length < 1) {
             throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND);
-        }else{
+        } else {
             return movies;
         }
     }
@@ -63,7 +63,7 @@ export class SearchController {
         const { userId } = req?.user
         const result = await this.searchService.registerLikeMovie(userId, movieId)
 
-        if(!result) {
+        if (!result) {
             throw new BadRequestException(MovieMessagesHelper.LIKE_MOVIE_INVALID)
         }
 
@@ -76,10 +76,33 @@ export class SearchController {
         const { userId } = req?.user
         const result = await this.searchService.registerDislikeMovie(userId, movieId)
 
-        if(!result) {
+        if (!result) {
             throw new BadRequestException(MovieMessagesHelper.DISLIKE_MOVIE_INVALID)
         }
 
         return result
+    }
+
+    @Get('rating/:id')
+    @HttpCode(HttpStatus.OK)
+    @IsPublic()
+    async getRating(@Param('id') movieId: string) {
+        let result = await this.searchService.getMovieRating(movieId);
+        if (!result) {
+            throw new BadRequestException(MovieMessagesHelper.MOVIE_RATING_NOT_FOUND)
+        }
+        return result
+    }
+
+    @Get("movie/")
+    @HttpCode(HttpStatus.OK)
+    @IsPublic()
+    async getDetails(@Query() imdbID) {
+        const movieObject = await this.searchService.searchOnMyDb(imdbID.imdbID);
+        if (!movieObject) {
+            throw new BadRequestException(MovieMessagesHelper.NO_RESULTS_FOUND);
+        } else {
+            return movieObject[0];
+        }
     }
 }

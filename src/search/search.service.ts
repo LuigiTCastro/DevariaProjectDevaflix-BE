@@ -186,7 +186,7 @@ export class SearchService {
                     query[attr] = { $regex: filters[attr], $options: 'i' };
                     if (attr === 'imdbRating') {
                         // se pesquisar numero inteiro, retorna do num int até o valor mais próximo do num int posterior (ex.: 7 -> de 7.0 a 7.9)
-                        if(Number.isInteger(Number(filters[attr]))) {
+                        if (Number.isInteger(Number(filters[attr]))) {
                             for (let i = 0.0; i < 0.9; i += 0.1) {
                                 scores.push((Number(filters[attr]) + i).toFixed(1))
                             }
@@ -240,10 +240,10 @@ export class SearchService {
             // }
             // const moviesList = await this.searchMovie(movieObj) // busca com o metodo searchMovie, salvando no banco (mais demorado).
             // movie = moviesList.find((movie) => movie.imdbID === randomMovie.imdbID)
-            movie = await this.searchModel.findOne({imdbID: randomMovie.imdbID}) // procura se no banco existe o filme para pegar o trailer (modelo mais rapido).
-            if(movie) randomMovie.videos = movie.videos
+            movie = await this.searchModel.findOne({ imdbID: randomMovie.imdbID }) // procura se no banco existe o filme para pegar o trailer (modelo mais rapido).
+            if (movie) randomMovie.videos = movie.videos
             else randomMovie.videos = 'N/A'
-                
+
             this.logger.debug('Random movie found.')
             const result = {
                 id: randomMovie._id,
@@ -399,5 +399,10 @@ export class SearchService {
             percentageLikes: obj.percentageLikes
         })
         return obj.percentageLikes
+    }
+
+    async getMovieRating(movieId: string) {
+        this.logger.debug(`Fetching likes data in the id ${movieId}.`)
+        return await this.ratingModel.findOne({ _id: movieId });
     }
 }
