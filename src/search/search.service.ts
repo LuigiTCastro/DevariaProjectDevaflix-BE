@@ -133,7 +133,7 @@ export class SearchService {
                     for (const movieObject of movieOnDB) {
                         objRatingModel = await this.ratingModel.findOne({imdbID: movieObject.imdbID})
                         if(!objRatingModel) {
-                            await this.createObjRatingModel(movieObject.id)
+                            await this.createRatingObj(movieObject.id)
                         }
                         if(!imdbIdList.includes(movieObject.imdbID)) {
                             imdbIdList.push(movieObject.imdbID)
@@ -146,7 +146,7 @@ export class SearchService {
                     for (const movieObject of movieOnDB) {
                         objRatingModel = await this.ratingModel.findOne({imdbID: movieObject.imdbID})
                         if(!objRatingModel) {
-                            await this.createObjRatingModel(movieObject.id)
+                            await this.createRatingObj(movieObject.id)
                         }
                         if(!imdbIdList.includes(movieObject.imdbID)) {
                             imdbIdList.push(movieObject.imdbID)
@@ -309,10 +309,10 @@ export class SearchService {
         try {
             this.logger.debug('Procurando filme.')
             const movie = await this.searchModel.findById({ _id: movieId });
-            let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
+            const obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
             if (!obj) {
-                await this.createObjRatingModel(movieId)
+                await this.createRatingObj(movieId)
             }
             if (obj.dislikes.indexOf(loggedUserId) != -1) {
                 obj.dislikes.splice(obj.dislikes.indexOf(loggedUserId), 1)
@@ -350,7 +350,7 @@ export class SearchService {
             let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
             if (!obj) {
-                await this.createObjRatingModel(movieId)
+                await this.createRatingObj(movieId)
             }
             if (obj.likes.indexOf(loggedUserId) != -1) {
                 obj.likes.splice(obj.likes.indexOf(loggedUserId), 1)
@@ -396,11 +396,10 @@ export class SearchService {
     }
 
     async getMovieRating(movieId: string) {
-        this.logger.debug(`Fetching likes data in the id ${movieId}.`)
         return await this.ratingModel.findOne({ _id: movieId });
     }
 
-    async createObjRatingModel(movieId: string) {
+    async createRatingObj(movieId: string) {
         const movie = await this.searchModel.findOne({ _id: movieId })
         const obj = new this.ratingModel({
             imdbID: movie.imdbID,
