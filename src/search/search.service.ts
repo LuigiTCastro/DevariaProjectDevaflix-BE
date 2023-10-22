@@ -167,6 +167,7 @@ export class SearchService {
             } as SearchDto
             await this.tempsearchModel.deleteMany({ imdbID: movie.imdbID });
             await this.searchModel.create(movie);
+            this.createRatingObj(movie)
         }
         return;
     }
@@ -295,20 +296,8 @@ export class SearchService {
         try {
             this.logger.debug('Procurando filme.')
             const movie = await this.searchModel.findById({ _id: movieId });
-            let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
+            const obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
-            if (!obj) {
-                obj = new this.ratingModel({
-                    imdbID: movie.imdbID,
-                    title: movie.title,
-                    likes: [],
-                    totalLikes: 0,
-                    dislikes: [],
-                    totalDislikes: 0,
-                    percentagelLikes: 0,
-                });
-                await obj.save();
-            }
             if (obj.dislikes.indexOf(loggedUserId) != -1) {
                 obj.dislikes.splice(obj.dislikes.indexOf(loggedUserId), 1)
             }
@@ -342,20 +331,7 @@ export class SearchService {
         try {
             this.logger.debug('Procurando filme.')
             const movie = await this.searchModel.findById({ _id: movieId });
-            let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
-
-            if (!obj) {
-                obj = new this.ratingModel({
-                    imdbID: movie.imdbID,
-                    title: movie.title,
-                    likes: [],
-                    totalLikes: 0,
-                    dislikes: [],
-                    totalDislikes: 0,
-                    percentageLikes: 0,
-                });
-                await obj.save();
-            }
+            const obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
             if (obj.likes.indexOf(loggedUserId) != -1) {
                 obj.likes.splice(obj.likes.indexOf(loggedUserId), 1)
@@ -399,6 +375,19 @@ export class SearchService {
             percentageLikes: obj.percentageLikes
         })
         return obj.percentageLikes
+    }
+
+    async createRatingObj(movie){
+        const obj = new this.ratingModel({
+            imdbID: movie.imdbID,
+            title: movie.title,
+            likes: [],
+            totalLikes: 0,
+            dislikes: [],
+            totalDislikes: 0,
+            percentageLikes: 0,
+        });
+        await obj.save();
     }
 
     async getMovieRating(movieId: string) {
