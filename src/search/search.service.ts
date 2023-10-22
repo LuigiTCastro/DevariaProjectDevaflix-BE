@@ -12,8 +12,6 @@ import { randomInt } from 'crypto';
 import { Rating, RatingDocument } from './schemas/rating.schema';
 import { RatingDto } from './dtos/rating.dto';
 
-
-
 @Injectable()
 export class SearchService {
     constructor(
@@ -173,7 +171,8 @@ export class SearchService {
                 videos:title.videos
             } as SearchDto
             await this.tempsearchModel.deleteMany({imdbID:movie.imdbID});
-            await this.searchModel.create(movie);                
+            await this.searchModel.create(movie);
+            this.createRatingObj(movie)                
         }
         return;
     }
@@ -276,29 +275,15 @@ export class SearchService {
         }
     }
 
-    async registerLikeMovie(loggedUserId: string, movie_Id: string) {
+    async registerLikeMovie(loggedUserId: string, movieId: string) {
         try {
             this.logger.debug('Procurando filme.')
-            const movie = await this.searchModel.findById({ _id: movie_Id });
-            let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
+            const movie = await this.searchModel.findById({ _id: movieId });
+            const obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
-            if (!obj) {
-                obj = new this.ratingModel({
-                    imdbID: movie.imdbID,
-                    title: movie.title,
-                    likes: [],
-                    totalLikes: 0,
-                    dislikes: [],
-                    totalDislikes: 0,
-                    percentagelLikes: 0,
-                });
-                await obj.save();
-            }
-
-            if(obj.dislikes.indexOf(loggedUserId) != -1) {
+            if (obj.dislikes.indexOf(loggedUserId) != -1) {
                 obj.dislikes.splice(obj.dislikes.indexOf(loggedUserId), 1)
             }
-
             if (obj.likes.indexOf(loggedUserId) == -1) {
                 obj.likes.push(loggedUserId)
                 this.logger.debug('Like registrado com sucesso.')
@@ -315,7 +300,7 @@ export class SearchService {
                 likes: obj.likes, totalLikes: obj.totalLikes,
                 dislikes: obj.dislikes, totalDislikes: obj.totalDislikes
             })
-            obj.percentageLikes = await this.registerPercentageLikes(movie_Id)
+            obj.percentageLikes = await this.registerPercentageLikes(movieId)
             return obj
         }
 
@@ -325,26 +310,13 @@ export class SearchService {
         }
     }
 
-    async registerDislikeMovie(loggedUserId: string, movie_Id: string) {
+    async registerDislikeMovie(loggedUserId: string, movieId: string) {
         try {
             this.logger.debug('Procurando filme.')
-            const movie = await this.searchModel.findById({ _id: movie_Id });
-            let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
+            const movie = await this.searchModel.findById({ _id: movieId });
+            const obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
-            if (!obj) {
-                obj = new this.ratingModel({
-                    imdbID: movie.imdbID,
-                    title: movie.title,
-                    likes: [],
-                    totalLikes: 0,
-                    dislikes: [],
-                    totalDislikes: 0,
-                    percentageLikes: 0,
-                });
-                await obj.save();
-            }
-
-            if(obj.likes.indexOf(loggedUserId) != -1) {
+            if (obj.likes.indexOf(loggedUserId) != -1) {
                 obj.likes.splice(obj.likes.indexOf(loggedUserId), 1)
             }
 
@@ -364,7 +336,7 @@ export class SearchService {
                 dislikes: obj.dislikes, totalDislikes: obj.totalDislikes,
                 likes: obj.likes, totalLikes: obj.totalLikes
             })
-            obj.percentageLikes = await this.registerPercentageLikes(movie_Id)
+            obj.percentageLikes = await this.registerPercentageLikes(movieId)
             return obj
         }
 
@@ -388,6 +360,19 @@ export class SearchService {
             percentageLikes: titleLikes.percentageLikes
         })
         return titleLikes.percentageLikes
+    }
+
+    async createRatingObj(movie){
+        const obj = new this.ratingModel({
+            imdbID: movie.imdbID,
+            title: movie.title,
+            likes: [],
+            totalLikes: 0,
+            dislikes: [],
+            totalDislikes: 0,
+            percentageLikes: 0,
+        });
+        await obj.save();
     }
 
     async getMovieRating(movieId: string) {
