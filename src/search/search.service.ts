@@ -121,29 +121,45 @@ export class SearchService {
         return tmdbDetails;
     }
 
-    async searchMovie(title:TempSearchDto){
-        try{
-            this.logger.debug(`Procurando títulos relacionados a ${title.title} .`)
+    async searchMovie(title: TempSearchDto) {
+        try {
+            this.logger.debug(`Procurando filmes relacionados a ${title.title} .`)
             let movieList = [];
+            let imdbIdList = [];
+            let objRatingModel
             const traducoes = await this.searchOnTmDb(title);
             this.logger.debug(`${traducoes.length} filmes encontrados no tmdb! hora de procurar no meu db!`)
             for (const iten of traducoes) {
                 let movieOnDB = await this.searchOnMyDb(iten.imdbID);
-                if (movieOnDB !== null){
+                if (movieOnDB !== null) {
                     for (const movieObject of movieOnDB) {
-                        movieList.push(movieObject);
+                        objRatingModel = await this.ratingModel.findOne({imdbID: movieObject.imdbID})
+                        if(!objRatingModel) {
+                            await this.createRatingObj(movieObject.id)
+                        }
+                        if(!imdbIdList.includes(movieObject.imdbID)) {
+                            imdbIdList.push(movieObject.imdbID)
+                            movieList.push(movieObject);
+                        }
                     }
-                }else{
+                } else {
                     await this.searchOnOmDb(iten)
                     movieOnDB = await this.searchOnMyDb(iten.imdbID);
                     for (const movieObject of movieOnDB) {
-                        movieList.push(movieObject);                        
+                        objRatingModel = await this.ratingModel.findOne({imdbID: movieObject.imdbID})
+                        if(!objRatingModel) {
+                            await this.createRatingObj(movieObject.id)
+                        }
+                        if(!imdbIdList.includes(movieObject.imdbID)) {
+                            imdbIdList.push(movieObject.imdbID)
+                            movieList.push(movieObject);
+                        }
                     }
                 }
             }
             this.logger.debug(`Busca finalizada! Retornando ${movieList?.length} resultados!`)
             return movieList;
-        }catch (error){
+        } catch (error) {
             console.log(error);
         }
     }
@@ -172,14 +188,14 @@ export class SearchService {
             } as SearchDto
             await this.tempsearchModel.deleteMany({imdbID:movie.imdbID});
             await this.searchModel.create(movie);
-            this.createRatingObj(movie)                
         }
         return;
     }
 
     async findMoviesbyfilter(filters:any) {
         try{
-            this.logger.debug(`Filtrando filmes por ${filters.genre}`)
+            console.log(filters)
+            this.logger.debug(`Filtrando filmes por ${filters?.genre}`)
             const query = {};
             const filterAttributes = ['year','genre', 'director', 'actor', 'imdbRating', 'plot'];
             for(const attr of filterAttributes){
@@ -362,7 +378,12 @@ export class SearchService {
         return titleLikes.percentageLikes
     }
 
-    async createRatingObj(movie){
+    async getMovieRating(movieId: string) {
+        return await this.ratingModel.findOne({ imdbID: movieId });
+    }
+
+    async createRatingObj(movieId: string) {
+        const movie = await this.searchModel.findOne({ _id: movieId })
         const obj = new this.ratingModel({
             imdbID: movie.imdbID,
             title: movie.title,
@@ -374,9 +395,4 @@ export class SearchService {
         });
         await obj.save();
     }
-
-    async getMovieRating(movieId: string) {
-        return await this.ratingModel.findOne({ _id: movieId });
-    }
-    
 }
