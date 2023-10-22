@@ -43,7 +43,7 @@ export class SearchService {
     }
 
     newObjectModel(objeto1, imdbId, id) {
-        const restult = {
+        const result = {
             name: objeto1.name,
             title: objeto1.name,
             type: 'tv',
@@ -53,7 +53,7 @@ export class SearchService {
             videos: "N]A"
         };
 
-        return restult;
+        return result;
 
     }
     async searchOnTmDb(title: TempSearchDto) {
@@ -123,19 +123,35 @@ export class SearchService {
         try {
             this.logger.debug(`Procurando filmes relacionados a ${title.title} .`)
             let movieList = [];
+            let imdbIdList = [];
+            let objRatingModel
             const traducoes = await this.searchOnTmDb(title);
             this.logger.debug(`${traducoes.length} filmes encontrados no tmdb! hora de procurar no meu db!`)
             for (const iten of traducoes) {
                 let movieOnDB = await this.searchOnMyDb(iten.imdbID);
                 if (movieOnDB !== null) {
                     for (const movieObject of movieOnDB) {
-                        movieList.push(movieObject);
+                        objRatingModel = await this.ratingModel.findOne({imdbID: movieObject.imdbID})
+                        if(!objRatingModel) {
+                            await this.createObjRatingModel(movieObject.id)
+                        }
+                        if(!imdbIdList.includes(movieObject.imdbID)) {
+                            imdbIdList.push(movieObject.imdbID)
+                            movieList.push(movieObject);
+                        }
                     }
                 } else {
                     await this.searchOnOmDb(iten)
                     movieOnDB = await this.searchOnMyDb(iten.imdbID);
                     for (const movieObject of movieOnDB) {
-                        movieList.push(movieObject);
+                        objRatingModel = await this.ratingModel.findOne({imdbID: movieObject.imdbID})
+                        if(!objRatingModel) {
+                            await this.createObjRatingModel(movieObject.id)
+                        }
+                        if(!imdbIdList.includes(movieObject.imdbID)) {
+                            imdbIdList.push(movieObject.imdbID)
+                            movieList.push(movieObject);
+                        }
                     }
                 }
             }
@@ -146,11 +162,9 @@ export class SearchService {
         }
     }
 
-
     async searchOnOmDb(title: TempSearchDto) {
-        let translatedInfo;
         let details = await this.axios.getDetailedMoviesOnOMDB(title.imdbID);
-        translatedInfo = await this.axios.getTranslatedPlotOnTmdb(title);
+        let translatedInfo = await this.axios.getTranslatedPlotOnTmdb(title);
         if (details.Response !== false) {
             const movie = {
                 title: title.title,
@@ -162,7 +176,7 @@ export class SearchService {
                 director: details.Director ? details.Director : "N/A",
                 actor: details.Actors ? details.Actors : "N/A",
                 imdbRating: details.imdbRating ? details.imdbRating : "N/A",
-                plot: translatedInfo.overview ? translatedInfo.overview : details.Plot,
+                plot: translatedInfo.overview ? translatedInfo.overview : details.Plot || "N/A",
                 videos: title.videos
             } as SearchDto
             await this.tempsearchModel.deleteMany({ imdbID: movie.imdbID });
@@ -171,7 +185,7 @@ export class SearchService {
         return;
     }
 
-    // MAKE TO SEARCH IN THE APIS TOO
+    // MAKE TO SEARCH IN THE APIS TOO?
     async findMoviesByFilter(filters: any) {
         try {
             this.logger.debug('Filtrando filmes')
@@ -298,16 +312,7 @@ export class SearchService {
             let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
             if (!obj) {
-                obj = new this.ratingModel({
-                    imdbID: movie.imdbID,
-                    title: movie.title,
-                    likes: [],
-                    totalLikes: 0,
-                    dislikes: [],
-                    totalDislikes: 0,
-                    percentagelLikes: 0,
-                });
-                await obj.save();
+                await this.createObjRatingModel(movieId)
             }
             if (obj.dislikes.indexOf(loggedUserId) != -1) {
                 obj.dislikes.splice(obj.dislikes.indexOf(loggedUserId), 1)
@@ -345,22 +350,11 @@ export class SearchService {
             let obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
 
             if (!obj) {
-                obj = new this.ratingModel({
-                    imdbID: movie.imdbID,
-                    title: movie.title,
-                    likes: [],
-                    totalLikes: 0,
-                    dislikes: [],
-                    totalDislikes: 0,
-                    percentageLikes: 0,
-                });
-                await obj.save();
+                await this.createObjRatingModel(movieId)
             }
-
             if (obj.likes.indexOf(loggedUserId) != -1) {
                 obj.likes.splice(obj.likes.indexOf(loggedUserId), 1)
             }
-
             if (obj.dislikes.indexOf(loggedUserId) == -1) {
                 obj.dislikes.push(loggedUserId)
                 this.logger.debug('Dislike registrado com sucesso.')
@@ -404,5 +398,19 @@ export class SearchService {
     async getMovieRating(movieId: string) {
         this.logger.debug(`Fetching likes data in the id ${movieId}.`)
         return await this.ratingModel.findOne({ _id: movieId });
+    }
+
+    async createObjRatingModel(movieId: string) {
+        const movie = await this.searchModel.findOne({ _id: movieId })
+        const obj = new this.ratingModel({
+            imdbID: movie.imdbID,
+            title: movie.title,
+            likes: [],
+            totalLikes: 0,
+            dislikes: [],
+            totalDislikes: 0,
+            percentageLikes: 0,
+        })
+        await obj.save()
     }
 }
