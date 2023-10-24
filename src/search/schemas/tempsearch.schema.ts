@@ -18,7 +18,7 @@ export class TempSearch {
     tmdbId: string;
 
     @Prop({required: true})
-    videos: string;
+    videos: string[];
 }
 
 export const TempSearchSchema = SchemaFactory.createForClass(TempSearch);

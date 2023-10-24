@@ -50,7 +50,7 @@ export class SearchService {
             status: objeto1.status,
             imdb_id: imdbId,
             id: id,
-            videos: "N]A"
+            videos: "N/A"
         };
 
         return result;
@@ -109,7 +109,7 @@ export class SearchService {
                         type: id.type,
                         imdbID: result.imdb_id ? result.imdb_id : id.imdbID,
                         tmdbId: id.id,
-                        videos: trailers.toString() ? trailers.toString() : "N/A"
+                        videos: trailers ? trailers : "N/A"
                     }
                     tmdbDetails.push(movieObj)
                     await this.tempsearchModel.create(movieObj); // Criar regra para demonstrar que esses objetos não contem informações minimas para retornar um objeto valido.
@@ -163,23 +163,28 @@ export class SearchService {
     }
 
     async searchOnOmDb(title: TempSearchDto) {
+        let translatedInfo;
         let details = await this.axios.getDetailedMoviesOnOMDB(title.imdbID);
-        let translatedInfo = await this.axios.getTranslatedPlotOnTmdb(title);
-        if (details.Response !== false) {
+        translatedInfo = await this.axios.getTranslatedPlotOnTmdb(title);
+        if(details.Response !== false){
+            if(details.imdbRating === "N/A"){
+                details.imdbRating = 0;
+            }
             const movie = {
                 title: title.title,
-                translatedTitle: translatedInfo.title ? translatedInfo.title : translatedInfo.name,
-                poster: details.Poster ? details.Poster : "N/A",
+                translatedTitle: translatedInfo.title? translatedInfo.title: translatedInfo.name,
+                poster: details.Poster? details.Poster : "N/A",
                 imdbID: title.imdbID,
+                duracao: details.Runtime ? details.Runtime : translatedInfo.episode_run_time  || "N/A",
                 year: details.Year ? details.Year : "N/A",
                 genre: details.Genre ? details.Genre : "N/A",
                 director: details.Director ? details.Director : "N/A",
                 actor: details.Actors ? details.Actors : "N/A",
-                imdbRating: details.imdbRating ? details.imdbRating : "N/A",
-                plot: translatedInfo.overview ? translatedInfo.overview : details.Plot || "N/A",
-                videos: title.videos
+                imdbRating: details.imdbRating ? details.imdbRating : 0,
+                plot: translatedInfo.overview ? translatedInfo.overview : details.Plot  || "N/A",
+                videos:title.videos
             } as SearchDto
-            await this.tempsearchModel.deleteMany({ imdbID: movie.imdbID });
+            await this.tempsearchModel.deleteMany({imdbID:movie.imdbID});
             await this.searchModel.create(movie);
         }
         return;
@@ -271,7 +276,7 @@ export class SearchService {
                 director: randomMovie.Director,
                 actor: randomMovie.Actors,
                 imdbRating: randomMovie.imdbRating,
-                runtime: randomMovie.Runtime,
+                duracao: randomMovie.Runtime,
                 language: randomMovie.Language,
                 plot: randomMovie.Plot,
                 videos: randomMovie.videos

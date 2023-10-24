@@ -17,6 +17,9 @@ export class Search {
     @Prop({ required: true })
     imdbID: string;
 
+    @Prop({required: true})
+    duracao:string;
+
     @Prop({ required: true })
     year: string;
 
@@ -30,7 +33,7 @@ export class Search {
     actor: string;
 
     @Prop({ required: true })
-    imdbRating: string;
+    imdbRating: number;
 
     @Prop({ required: true })
     plot: string;

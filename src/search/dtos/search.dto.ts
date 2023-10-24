@@ -14,6 +14,9 @@ export class SearchDto {
     imdbID: string;
 
     @IsString()
+    duracao:string;
+
+    @IsString()
     year: string;
 
     @IsString()
@@ -26,7 +29,7 @@ export class SearchDto {
     actor: string;
 
     @IsString()
-    imdbRating: string;
+    imdbRating: number;
 
     @IsString()
     plot: string;
