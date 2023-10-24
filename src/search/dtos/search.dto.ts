@@ -34,5 +34,5 @@ export class SearchDto {
     @IsArray()
     @IsString({ each: true })
     @ArrayMinSize(1)
-    videos: string;
+    videos: string[];
 }
