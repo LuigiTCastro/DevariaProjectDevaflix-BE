@@ -77,7 +77,7 @@ export class SearchService {
                     const searchTrailers = await this.axios.getMovieTrailer(id.id);
                     for (const trailer of searchTrailers) {
                         if (trailer.site === "YouTube") {
-                            trailers.push(`https://www.youtube.com/watch?v=${trailer.key} `);
+                            trailers.push(`https://www.youtube.com/embed/${trailer.key} `);
                         } else {
                             trailers.push(`Site:${trailer.site}, Key:${trailer.key} `);
                         }
@@ -88,7 +88,7 @@ export class SearchService {
                     const searchTrailers = await this.axios.getSeriesTrailer(id.id);
                     for (const trailer of searchTrailers) {
                         if (trailer.site === "YouTube") {
-                            trailers.push(`https://www.youtube.com/watch?v=${trailer.key} `);
+                            trailers.push(`https://www.youtube.com/embed/${trailer.key} `);
                         } else {
                             trailers.push(`Site:${trailer.site}, Key:${trailer.key} `);
                         }
@@ -310,7 +310,6 @@ export class SearchService {
             this.logger.debug('Procurando filme.')
             const movie = await this.searchModel.findById({ _id: movieId });
             const obj = await this.ratingModel.findOne({ imdbID: movie.imdbID });
-
             if (!obj) {
                 await this.createRatingObj(movieId)
             }
@@ -396,7 +395,7 @@ export class SearchService {
     }
 
     async getMovieRating(movieId: string) {
-        return await this.ratingModel.findOne({ _id: movieId });
+        return await this.ratingModel.findOne({ imdbID: movieId });
     }
 
     async createRatingObj(movieId: string) {
