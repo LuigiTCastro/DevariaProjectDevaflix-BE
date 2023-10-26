@@ -1,73 +1,72 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# DEVAFLIX
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+O projeto DEVAFLIX foi concebido com o propósito de auxiliar os usuários na escolha de filmes e séries, proporcionando uma experiência de busca aprimorada. A plataforma permite usar uma ferramenta de busca com filtros avançados, tais como gênero, ano de lançamento, rating, direção etc.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+O Projeto foi desenvolvido para o desafio 2023 (live) usando Nest.js na formação Devaria. O projeto DevaFlix situa-se em uma plataforma "Guia de títulos", buscando por filmes ou séries e apresentando-os com detalhes e trailers.
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
+### O protótipo utilizado para desenvolver a camada de frontend deste projeto, desenvolvido no Figma, pode ser acessado por meio do seguinte link:
 
 ```bash
+https://www.figma.com/file/8C0ajaF4uQ0SbWVNCMn1Z0/DEVAFLIX?type=design&node-id=0-1&mode=design&t=6QOV1jYFy2dFF7P5-0
+
+```
+
+## Tecnologias Utilizadas
+
+A camada de backend do projeto DEVAFLIX utiliza as seguintes tecnologias:
+
+- Node.js v20.5.1
+- Nest.js v10.1.16
+- Axios v3.0.0
+- MongoDB
+
+## Funcionalidades
+
+- Busca avançada de filmes e séries com base em critérios como gênero, ano de lançamento, rating, direção, etc.
+- Exibição de informações detalhadas sobre filmes e séries, incluindo sinopse, elenco, classificação, etc.
+
+## Como Usar
+#
+### Configuração do ambiente de desenvolvimento
+```bash
+
+# Tenha instalado o ambiente NODEJS
+https://nodejs.org/en
+
+# Tenha instalado uma IDE, como o VsCode
+https://code.visualstudio.com/
+
+# Clone o repositório 
+git clone https://github.com/LuigiTCastro/DevariaProjectDevaflix-BE.git
+ 
+# Configure as variaveis
+fazer uma copia do arquivo `.env.example` e renomear o novo arquivo de `.env.local`, e configurar as variáveis de ambiente no arquivo `.env.local` 
+
+# Instale as dependencias do projeto 
 $ npm install
-```
 
-## Running the app
-
-```bash
-# development
-$ npm run start
-
-# watch mode
+# Execute o projeto
 $ npm run start:dev
-
-# production mode
-$ npm run start:prod
 ```
 
-## Test
+## Projeto Finalizado
+<div align="center" width="100%">
+<img class="logo-nav" height="65%" width="65%" src="src/assets/imagens/imgDevaflix.png" alt="img tela login">
+</div>
 
-```bash
-# unit tests
-$ npm run test
+#
+## Fontes de Dados
+Usamos as APIs de chave gratuita OMDB API e TMDB API para buscar informações pertinentes a filmes e séries.
+https://www.omdbapi.com/
+https://www.themoviedb.org/
 
-# e2e tests
-$ npm run test:e2e
+## Front-End
+https://github.com/LuigiTCastro/DevariaProjectDevaflix-FE.git
+#
 
-# test coverage
-$ npm run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+### Autores
+* **Aline**
+* **Eliane Henriqueta**
+* **Luigi Castro**
+* **Renata Fernandes**
+* **Sergio Daniel Farina**
