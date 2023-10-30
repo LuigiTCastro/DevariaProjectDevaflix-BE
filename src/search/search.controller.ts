@@ -105,4 +105,16 @@ export class SearchController {
             return movieObject[0];
         }
     }
+
+    @Get("genres")
+    @HttpCode(HttpStatus.OK)
+    @IsPublic()
+    async getGenres() {
+        const genres = await this.searchService.findGenres();
+        if (genres.length < 1) {
+            throw new BadRequestException(MovieMessagesHelper.NO_GENRE_FOUND);
+        } else {
+            return genres;
+        }
+    }
 }
