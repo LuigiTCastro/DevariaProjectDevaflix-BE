@@ -24,7 +24,13 @@ export class SearchService {
 
     private logger = new Logger(SearchService.name);
 
-    async searchOnMyDb(imdbID: string) {
+    async findGenres() {
+        this.logger.debug("Buscando todos os Gêneros disponiveis para poder criar os containers de titulos.")
+        const genres = await this.searchModel.distinct('genre');
+        return genres;
+    }
+    
+      async searchOnMyDb(imdbID: string) {
         const search = await this.searchModel.find({ imdbID: imdbID });
         if (search.length > 0) {
             return search;
